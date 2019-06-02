@@ -16,5 +16,10 @@ namespace RxStore
             Func<TSource, int, TProjection> selector
         )
             => source.Select(selector).DistinctUntilChanged();
+        
+        public static IObservable<TAction> IgnoreElementsAs<TAction>(
+            this IObservable<object> source
+        )
+            => source.IgnoreElements().Cast<TAction>();
     }
 }

@@ -10,7 +10,7 @@ namespace RxStore
     {
         private readonly ISubject<TAction> _actions = new Subject<TAction>();
 
-        private readonly IConnectableObservable<TState> _states;
+        private readonly IObservable<TState> _states;
 
         private readonly IDisposable _statesConnection;
 
@@ -22,19 +22,21 @@ namespace RxStore
             IEnumerable<IDeclareEffects<TState, TAction>> effectsDeclarations
         )
         {
-            _states = _actions
+            var statesConnectable = _actions
                 .Scan(initialState, reducer)
                 .StartWith(initialState)
                 .DistinctUntilChanged()
                 .Replay(1);
             
-            _statesConnection = _states.Connect();
+            _statesConnection = statesConnectable.Connect();
+
+            _states = statesConnectable.AsObservable();
             
             var actions = _actions.AsObservable();
             var fallback = Observable.Empty<TAction>();
 
             var allEffects = effectsDeclarations
-                .SelectMany(effectsDeclaration => effectsDeclaration.GetEffects(actions))
+                .SelectMany(effectsDeclaration => effectsDeclaration.GetEffects(_states, actions))
                 .Where(effects => effects != null)
                 .Select(effects => effects.Catch<TAction>(fallback))
                 .ToObservable()

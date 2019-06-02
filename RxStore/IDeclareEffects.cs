@@ -5,6 +5,9 @@ namespace RxStore
 {
     public interface IDeclareEffects<TState, TAction>
     {
-        IEnumerable<IObservable<TAction>> GetEffects(IObservable<TAction> actions);
+        IEnumerable<IObservable<TAction>> GetEffects(
+            IObservable<TState> states,
+            IObservable<TAction> actions
+        );
     }
 }
