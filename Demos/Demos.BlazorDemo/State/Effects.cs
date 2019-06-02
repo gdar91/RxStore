@@ -20,8 +20,6 @@ namespace Demos.BlazorDemo.State
                 .OfType<ReceiveWeatherForecastsAction>()
                 .Select(action => new IncrementCountAction())
                 .Do(action => Console.WriteLine("When you load weather forecasts, the counter is increased by 1"));
-
-            yield return null;
         }
     }
 }
