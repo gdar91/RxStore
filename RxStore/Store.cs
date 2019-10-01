@@ -1,60 +1,49 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 namespace RxStore
 {
-    public sealed class Store<TState, TAction> : IObservable<TState>, IDisposable
+    public sealed class Store<TState, TAction> :
+        IState<TState, TAction>,
+        IActions<TState, TAction>,
+        IDispatcher<TState, TAction>,
+        IDisposable
     {
-        private readonly ISubject<TAction> _actions = new Subject<TAction>();
+        internal readonly ISubject<TAction> actions = new Subject<TAction>();
 
-        private readonly IObservable<TState> _states;
+        private readonly IConnectableObservable<TState> states;
+        
+        private readonly IDisposable connection;
 
-        private readonly IDisposable _statesConnection;
 
-        private readonly IDisposable _effectsConnection;
-
-        public Store(
-            Func<TState, TAction, TState> reducer,
-            TState initialState,
-            IEnumerable<IDeclareEffects<TState, TAction>> effectsDeclarations
-        )
+        public Store(Func<TState, TAction, TState> reducer, TState initialState)
         {
-            var statesConnectable = _actions
+            Actions = actions.AsObservable();
+
+            states = actions
                 .Scan(initialState, reducer)
                 .StartWith(initialState)
                 .DistinctUntilChanged()
                 .Replay(1);
-            
-            _statesConnection = statesConnectable.Connect();
 
-            _states = statesConnectable.AsObservable();
-            
-            var actions = _actions.AsObservable();
-            var fallback = Observable.Empty<TAction>();
-
-            var allEffects = effectsDeclarations
-                .SelectMany(effectsDeclaration => effectsDeclaration.GetEffects(_states, actions))
-                .Where(effects => effects != null)
-                .Select(effects => effects.Catch<TAction>(fallback))
-                .ToObservable()
-                .Merge()
-                .Do(Dispatch)
-                .Publish();
-            
-            _effectsConnection = allEffects.Connect();
+            connection = states.Connect();
         }
 
-        public void Dispatch(TAction action) => _actions.OnNext(action);
 
-        public IDisposable Subscribe(IObserver<TState> observer) => _states.Subscribe(observer);
+        public IObservable<TAction> Actions { get; }
+
+
+        public void Dispatch(TAction action) => actions.OnNext(action);
+
+
+        public IDisposable Subscribe(IObserver<TState> observer)
+            => states.Subscribe(observer);
+
 
         public void Dispose()
         {
-            using var statesConnection = _statesConnection;
-            using var effectsConnection = _effectsConnection;
+            using var statesConnection = this.connection;
         }
     }
 }

@@ -1,28 +1,45 @@
 using System;
-using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace RxStore
 {
     public static class AddStoreExtensions
     {
-        public static AddStoreBuilder<TState, TAction> AddStore<TState, TAction>(
+        public static IServiceCollection AddStore<TState, TAction>(
             this IServiceCollection services,
             Func<TState, TAction, TState> reducer,
-            TState initialState
+            TState initialState,
+            Action<AddStoreBuilder<TState, TAction>> builderAction = null
         )
         {
-            services.AddSingleton(provider =>
-                new Store<TState, TAction>(
-                    reducer,
-                    initialState,
-                    provider.GetService<IEnumerable<IDeclareEffects<TState, TAction>>>()
-                )
+            services.AddSingleton(provider => new Store<TState, TAction>(reducer, initialState));
+
+
+            services.AddSingleton<IState<TState, TAction>>(provider =>
+                provider.GetRequiredService<Store<TState, TAction>>()
+            );
+            
+            services.AddSingleton<IActions<TState, TAction>>(provider =>
+                provider.GetRequiredService<Store<TState, TAction>>()
             );
 
-            var addStore = new AddStoreBuilder<TState, TAction>(services);
+            services.AddSingleton<IDispatcher<TState, TAction>>(provider =>
+                provider.GetRequiredService<Store<TState, TAction>>()
+            );
+            
 
-            return addStore;
+            services.AddSingleton<IEffectsDispatcher, EffectsDispatcher<TState, TAction>>();
+
+
+            services.TryAddSingleton<EffectsInitializer>();
+
+            if (builderAction != null)
+            {
+                builderAction(new AddStoreBuilder<TState, TAction>(services));
+            }
+
+            return services;
         }
     }
 }
