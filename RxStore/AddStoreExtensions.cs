@@ -15,29 +15,21 @@ namespace RxStore
         {
             services.AddSingleton(provider => new Store<TState, TAction>(reducer, initialState));
 
-
-            services.AddSingleton<IState<TState, TAction>>(provider =>
-                provider.GetRequiredService<Store<TState, TAction>>()
-            );
-            
-            services.AddSingleton<IActions<TState, TAction>>(provider =>
-                provider.GetRequiredService<Store<TState, TAction>>()
+            services.AddSingleton<IStore<TState, TAction>>(
+                provider => provider.GetRequiredService<Store<TState, TAction>>()
             );
 
-            services.AddSingleton<IDispatcher<TState, TAction>>(provider =>
-                provider.GetRequiredService<Store<TState, TAction>>()
-            );
-            
 
             services.AddSingleton<IEffectsDispatcher, EffectsDispatcher<TState, TAction>>();
 
-
             services.TryAddSingleton<EffectsInitializer>();
+
 
             if (builderAction != null)
             {
                 builderAction(new AddStoreBuilder<TState, TAction>(services));
             }
+
 
             return services;
         }

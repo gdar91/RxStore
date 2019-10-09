@@ -4,11 +4,7 @@ using System.Reactive.Subjects;
 
 namespace RxStore
 {
-    public sealed class Store<TState, TAction> :
-        IState<TState, TAction>,
-        IActions<TState, TAction>,
-        IDispatcher<TState, TAction>,
-        IDisposable
+    public sealed class Store<TState, TAction> : IStore<TState, TAction>, IDisposable
     {
         internal readonly ISubject<TAction> actions = new Subject<TAction>();
 

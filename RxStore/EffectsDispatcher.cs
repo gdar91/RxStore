@@ -5,9 +5,15 @@ using System.Reactive.Linq;
 
 namespace RxStore
 {
+    public interface IEffectsDispatcher : IDisposable
+    {
+        void Initialize();
+    }
+
+
     public sealed class EffectsDispatcher<TState, TAction> : IEffectsDispatcher
     {
-        private readonly IDispatcher<TState, TAction> dispatcher;
+        private readonly IStore<TState, TAction> stateManager;
 
         private readonly IEnumerable<IEffects<TState, TAction>> effectDeclarations;
 
@@ -15,11 +21,11 @@ namespace RxStore
 
 
         public EffectsDispatcher(
-            IDispatcher<TState, TAction> dispatcher,
+            IStore<TState, TAction> stateManager,
             IEnumerable<IEffects<TState, TAction>> effectDeclarations
         )
         {
-            this.dispatcher = dispatcher;
+            this.stateManager = stateManager;
             this.effectDeclarations = effectDeclarations;
         }
 
@@ -42,7 +48,7 @@ namespace RxStore
                     .Select(effects => effects.Catch(fallback))
                     .ToObservable()
                     .Merge()
-                    .Do(dispatcher.Dispatch)
+                    .Do(stateManager.Dispatch)
                     .Publish();
                 
                 connection = effects.Connect();

@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace RxStore
 {
@@ -12,6 +13,36 @@ namespace RxStore
         {
             this.services = services;
         }
+
+
+
+
+        public AddStoreBuilder<TState, TAction> WithProjections(Type type)
+        {
+            services.AddSingleton(type);
+
+            return this;
+        }
+
+        public AddStoreBuilder<TState, TAction> WithProjections<TDeclaration>()
+            where TDeclaration : class, IStore<TState, TAction>
+        {
+            services.AddSingleton<TDeclaration>();
+
+            return this;
+        }
+
+        public AddStoreBuilder<TState, TAction> WithProjections<TDeclaration>(
+            Func<IServiceProvider, TDeclaration> implementationFactory
+        )
+            where TDeclaration : IStore<TState, TAction>
+        {
+            services.AddSingleton(implementationFactory);
+
+            return this;
+        }
+
+
 
 
         public AddStoreBuilder<TState, TAction> WithEffects(Type type)
@@ -39,62 +70,39 @@ namespace RxStore
         }
 
 
-        public AddStoreBuilder<TState, TAction> WithProjection<TStateProjection, TActionProjection>(
-            Func<TState, TStateProjection> stateProjector,
-            Func<TAction, ValueTuple<bool, TActionProjection>> actionChooser,
-            Func<TActionProjection, TAction> actionGeneralizer,
-            Action<AddStoreBuilder<TStateProjection, TActionProjection>> buildAction = null
+
+
+        public AddStoreBuilder<TState, TAction> AddFeatureStore<TFeatureState, TFeatureAction>(
+            Func<TState, TFeatureState> stateProjector,
+            Func<TAction, ValueTuple<bool, TFeatureAction>> actionChooser,
+            Func<TFeatureAction, TAction> actionGeneralizer,
+            Action<AddStoreBuilder<TFeatureState, TFeatureAction>> buildAction = null
         )
         {
-            services.AddSingleton<IState<TStateProjection, TActionProjection>>(provider =>
+            services.AddSingleton<IStore<TFeatureState, TFeatureAction>>(provider =>
             {
-                var state = provider.GetRequiredService<IState<TState, TAction>>();
+                var store = provider.GetRequiredService<IStore<TState, TAction>>();
+
+                var featureStore = new FeatureStore<TState, TAction, TFeatureState, TFeatureAction>(
+                    store,
+                    stateProjector,
+                    actionChooser,
+                    actionGeneralizer
+                );
                 
-                var stateProjection =
-                    new StateProjection<TState, TAction, TStateProjection, TActionProjection>(
-                        state,
-                        stateProjector
-                    );
-
-                return stateProjection;
-            });
-
-
-            services.AddSingleton<IActions<TStateProjection, TActionProjection>>(provider =>
-            {
-                var actions = provider.GetRequiredService<IActions<TState, TAction>>();
-                
-                var actionsProjection =
-                    new ActionsProjection<TState, TAction, TStateProjection, TActionProjection>(
-                        actions,
-                        actionChooser
-                    );
-
-                return actionsProjection;
-            });
-
-
-            services.AddSingleton<IDispatcher<TStateProjection, TActionProjection>>(provider =>
-            {
-                var dispatcher = provider.GetRequiredService<IDispatcher<TState, TAction>>();
-
-                var dispatcherProjection =
-                    new DispatcherProjection<TState, TAction, TStateProjection, TActionProjection>(
-                        dispatcher,
-                        actionGeneralizer
-                    );
-
-                return dispatcherProjection;
+                return featureStore;
             });
 
 
             services
-                .AddSingleton<IEffectsDispatcher, EffectsDispatcher<TStateProjection, TActionProjection>>();
+                .AddSingleton<IEffectsDispatcher, EffectsDispatcher<TFeatureState, TFeatureAction>>();
+
+            services.TryAddSingleton<EffectsInitializer>();
 
 
             if (buildAction != null)
             {
-                buildAction(new AddStoreBuilder<TStateProjection, TActionProjection>(services));
+                buildAction(new AddStoreBuilder<TFeatureState, TFeatureAction>(services));
             }
 
 
