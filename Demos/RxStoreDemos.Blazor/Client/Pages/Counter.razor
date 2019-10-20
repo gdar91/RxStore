@@ -1,0 +1,26 @@
+﻿@page "/counter"
+
+@inject Store<AppState, IAppAction> Store
+
+<h1>Counter</h1>
+
+<Subscribe To="@CurrentCount" Context="currentCount">
+    <p>Current count: @currentCount</p>
+</Subscribe>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@code
+{
+    private IObservable<int> CurrentCount { get; set; }
+
+    protected override void OnInitialized()
+    {
+        CurrentCount = Store.Project(state => state.CurrentCount);
+    }
+
+    void IncrementCount()
+    {
+        Store.Dispatch(new IncrementCountAction());
+    }
+}

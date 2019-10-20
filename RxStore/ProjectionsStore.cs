@@ -2,19 +2,24 @@
 
 namespace RxStore
 {
-    public abstract class ProjectionsStore<TState, TAction> : IStore<TState, TAction>
+    public abstract class ProjectionsStore<TState, TAction> : Store<TState, TAction>
     {
-        private readonly IStore<TState, TAction> store;
+        private readonly Store<TState, TAction> store;
 
-        protected ProjectionsStore(IStore<TState, TAction> store)
+
+        protected ProjectionsStore(Store<TState, TAction> store) : base(store.initialState)
         {
             this.store = store;
         }
 
-        public IObservable<TAction> Actions => store.Actions;
 
-        public void Dispatch(TAction action) => store.Dispatch(action);
+        internal override IObservable<TAction> Actions => store.Actions;
 
-        public IDisposable Subscribe(IObserver<TState> observer) => store.Subscribe(observer);
+        internal override IObservable<(TAction action, TState state)> ActionStates => store.ActionStates;
+
+
+        public override void Dispatch(TAction action) => store.Dispatch(action);
+
+        public override IDisposable Subscribe(IObserver<TState> observer) => store.Subscribe(observer);
     }
 }

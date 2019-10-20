@@ -1,0 +1,60 @@
+﻿@page "/fetchdata"
+@using Microsoft.FSharp.Collections
+@using Microsoft.FSharp.Core
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject Store<AppState, AppAction> Store
+
+<h1>Weather forecast</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+<Subscribe To="@WeatherForecastsOption" Context="weatherForecastsOption">
+    @if (FSharpOption<FSharpList<WeatherForecast>>.get_IsNone(weatherForecastsOption))
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        var forecasts = weatherForecastsOption.Value;
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Temp. (C)</th>
+                    <th>Temp. (F)</th>
+                    <th>Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var forecast in forecasts)
+                {
+                    <tr>
+                        <td>@forecast.Date.ToShortDateString()</td>
+                        <td>@forecast.TemperatureC</td>
+                        <td>@temperatureF(forecast)</td>
+                        <td>@forecast.Summary</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</Subscribe>
+
+@code
+{
+    private IObservable<FSharpOption<FSharpList<WeatherForecast>>> WeatherForecastsOption { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        WeatherForecastsOption = Store.Project(state => state.WeatherForecastsOption);
+    
+        var json = await Http.GetStringAsync("WeatherForecast");
+        var weatherForecasts = JsonConvert.DeserializeObject<FSharpList<WeatherForecast>>(json);
+
+        var action = AppAction.NewReceiveWeatherForecasts(weatherForecasts);
+
+        Store.Dispatch(action);
+    }
+}

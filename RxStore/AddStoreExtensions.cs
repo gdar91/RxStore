@@ -1,6 +1,6 @@
 using System;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace RxStore
 {
@@ -13,16 +13,17 @@ namespace RxStore
             Action<AddStoreBuilder<TState, TAction>> builderAction = null
         )
         {
-            services.AddSingleton(provider => new Store<TState, TAction>(reducer, initialState));
-
-            services.AddSingleton<IStore<TState, TAction>>(
-                provider => provider.GetRequiredService<Store<TState, TAction>>()
+            services.AddSingleton(provider =>
+                new SourceStore<TState, TAction>(reducer, initialState)
             );
 
+            services.AddSingleton<Store<TState, TAction>>(provider =>
+                provider.GetRequiredService<SourceStore<TState, TAction>>()
+            );
 
-            services.AddSingleton<IEffectsDispatcher, EffectsDispatcher<TState, TAction>>();
-
-            services.TryAddSingleton<EffectsInitializer>();
+            services.AddSingleton<IConnectableStore>(provider =>
+                provider.GetRequiredService<SourceStore<TState, TAction>>()
+            );
 
 
             if (builderAction != null)
@@ -32,6 +33,19 @@ namespace RxStore
 
 
             return services;
+        }
+
+        public static void ConnectStore(this IServiceProvider serviceProvider)
+        {
+            var connectables = Enumerable.Concat<IConnectable>(
+                serviceProvider.GetServices<IConnectableEffects>(),
+                serviceProvider.GetServices<IConnectableStore>()
+            );
+
+            foreach (var connectable in connectables)
+            {
+                connectable.Connect();
+            }
         }
     }
 }

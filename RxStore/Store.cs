@@ -1,45 +1,25 @@
 ﻿using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 namespace RxStore
 {
-    public sealed class Store<TState, TAction> : IStore<TState, TAction>, IDisposable
+    public abstract class Store<TState, TAction> : IObservable<TState>
     {
-        internal readonly ISubject<TAction> actions = new Subject<TAction>();
+        internal readonly TState initialState;
 
-        private readonly IConnectableObservable<TState> states;
+
+        internal Store(TState initialState)
+        {
+            this.initialState = initialState;
+        }
+
+
+        internal abstract IObservable<TAction> Actions { get; }
+
+        internal abstract IObservable<(TAction action, TState state)> ActionStates { get; }
+
+
+        public abstract void Dispatch(TAction action);
         
-        private readonly IDisposable connection;
-
-
-        public Store(Func<TState, TAction, TState> reducer, TState initialState)
-        {
-            Actions = actions.AsObservable();
-
-            states = actions
-                .Scan(initialState, reducer)
-                .StartWith(initialState)
-                .DistinctUntilChanged()
-                .Replay(1);
-
-            connection = states.Connect();
-        }
-
-
-        public IObservable<TAction> Actions { get; }
-
-
-        public void Dispatch(TAction action) => actions.OnNext(action);
-
-
-        public IDisposable Subscribe(IObserver<TState> observer)
-            => states.Subscribe(observer);
-
-
-        public void Dispose()
-        {
-            using var statesConnection = this.connection;
-        }
+        public abstract IDisposable Subscribe(IObserver<TState> observer);
     }
 }

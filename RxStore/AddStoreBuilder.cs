@@ -1,6 +1,5 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace RxStore
 {
@@ -24,18 +23,18 @@ namespace RxStore
             return this;
         }
 
-        public AddStoreBuilder<TState, TAction> WithProjections<TDeclaration>()
-            where TDeclaration : class, IStore<TState, TAction>
+        public AddStoreBuilder<TState, TAction> WithProjections<TProjections>()
+            where TProjections : Store<TState, TAction>
         {
-            services.AddSingleton<TDeclaration>();
+            services.AddSingleton<TProjections>();
 
             return this;
         }
 
-        public AddStoreBuilder<TState, TAction> WithProjections<TDeclaration>(
-            Func<IServiceProvider, TDeclaration> implementationFactory
+        public AddStoreBuilder<TState, TAction> WithProjections<TProjections>(
+            Func<IServiceProvider, TProjections> implementationFactory
         )
-            where TDeclaration : IStore<TState, TAction>
+            where TProjections : Store<TState, TAction>
         {
             services.AddSingleton(implementationFactory);
 
@@ -47,24 +46,24 @@ namespace RxStore
 
         public AddStoreBuilder<TState, TAction> WithEffects(Type type)
         {
-            services.AddSingleton(typeof(IEffects<TState, TAction>), type);
+            services.AddSingleton(typeof(IConnectableEffects), type);
 
             return this;
         }
 
-        public AddStoreBuilder<TState, TAction> WithEffects<TDeclaration>()
-            where TDeclaration : class, IEffects<TState, TAction>
+        public AddStoreBuilder<TState, TAction> WithEffects<TEffects>()
+            where TEffects : Effects<TState, TAction>
         {
-            services.AddSingleton<IEffects<TState, TAction>, TDeclaration>();
+            services.AddSingleton<IConnectableEffects, TEffects>();
 
             return this;
         }
 
         public AddStoreBuilder<TState, TAction> WithEffects(
-            Func<IServiceProvider, IEffects<TState, TAction>> implementationFactory
+            Func<IServiceProvider, Effects<TState, TAction>> implementationFactory
         )
         {
-            services.AddSingleton(implementationFactory);
+            services.AddSingleton<IConnectableEffects>(implementationFactory);
 
             return this;
         }
@@ -79,9 +78,9 @@ namespace RxStore
             Action<AddStoreBuilder<TFeatureState, TFeatureAction>> buildAction = null
         )
         {
-            services.AddSingleton<IStore<TFeatureState, TFeatureAction>>(provider =>
+            services.AddSingleton(provider =>
             {
-                var store = provider.GetRequiredService<IStore<TState, TAction>>();
+                var store = provider.GetRequiredService<Store<TState, TAction>>();
 
                 var featureStore = new FeatureStore<TState, TAction, TFeatureState, TFeatureAction>(
                     store,
@@ -93,11 +92,9 @@ namespace RxStore
                 return featureStore;
             });
 
-
-            services
-                .AddSingleton<IEffectsDispatcher, EffectsDispatcher<TFeatureState, TFeatureAction>>();
-
-            services.TryAddSingleton<EffectsInitializer>();
+            services.AddSingleton<IConnectableStore>(provider =>
+                provider.GetRequiredService<FeatureStore<TState, TAction, TFeatureState, TFeatureAction>>()
+            );
 
 
             if (buildAction != null)

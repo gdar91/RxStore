@@ -1,36 +1,45 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace RxStore
 {
-    public interface IEffects<TState, TAction>
+    public abstract class Effects<TState, TAction> : IConnectableEffects
     {
-        IEnumerable<IObservable<TAction>> GetEffects();
-    }
+        private readonly IConnectableObservable<TAction> effects;
+
+        private IDisposable connection;
 
 
-    public abstract class Effects<TState, TAction>
-        : Effects<TState, TAction, IStore<TState, TAction>>
-    {
-        protected Effects(IStore<TState, TAction> store) : base(store)
-        { }
-    }
-
-
-    public abstract class Effects<TState, TAction, TStore> : IEffects<TState, TAction>
-        where TStore : IStore<TState, TAction>
-    {
-        protected Effects(TStore store)
+        protected Effects(Store<TState, TAction> store)
         {
-            Store = store;
+            var fallback = Observable.Empty<TAction>();
+
+            effects = GetEffects(store.Actions)
+                .Select(effectsObservable => effectsObservable.Catch(fallback))
+                .ToObservable()
+                .Merge()
+                .Do(store.Dispatch)
+                .Publish();
         }
 
 
-        protected TStore Store { get; }
-
-        protected IObservable<TAction> Actions  => Store.Actions;
+        public abstract IEnumerable<IObservable<TAction>> GetEffects(IObservable<TAction> actions);
 
 
-        public abstract IEnumerable<IObservable<TAction>> GetEffects();
+        void IConnectable.Connect()
+        {
+            lock (this)
+            {
+                connection = connection ?? effects.Connect();
+            }
+        }
+
+        public void Dispose()
+        {
+            using var resource = connection;
+        }
     }
 }
