@@ -47,7 +47,6 @@ namespace RxStore
         public AddStoreBuilder<TState, TAction> WithEffects(Type type)
         {
             services.AddSingleton(typeof(IEffects<TState, TAction>), type);
-            services.AddSingleton<IEffectsDispatcher, EffectsDispatcher<TState, TAction>>();
 
             return this;
         }
@@ -56,7 +55,6 @@ namespace RxStore
             where TEffects : class, IEffects<TState, TAction>
         {
             services.AddSingleton<IEffects<TState, TAction>, TEffects>();
-            services.AddSingleton<IEffectsDispatcher, EffectsDispatcher<TState, TAction>>();
 
             return this;
         }
@@ -66,7 +64,6 @@ namespace RxStore
         )
         {
             services.AddSingleton<IEffects<TState, TAction>>(implementationFactory);
-            services.AddSingleton<IEffectsDispatcher, EffectsDispatcher<TState, TAction>>();
 
             return this;
         }
@@ -95,9 +92,15 @@ namespace RxStore
                 return featureStore;
             });
 
+            services.AddSingleton<Store<TFeatureState, TFeatureAction>>(provider =>
+                provider.GetRequiredService<FeatureStore<TState, TAction, TFeatureState, TFeatureAction>>()
+            );
+
             services.AddSingleton<IConnectableStore>(provider =>
                 provider.GetRequiredService<FeatureStore<TState, TAction, TFeatureState, TFeatureAction>>()
             );
+
+            services.AddSingleton<IEffectsDispatcher, EffectsDispatcher<TFeatureState, TFeatureAction>>();
 
 
             if (buildAction != null)

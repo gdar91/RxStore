@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -16,11 +17,15 @@ namespace RxStore
 
         private IDisposable connection;
 
-        public EffectsDispatcher(IEffects<TState, TAction> effects, Store<TState, TAction> store)
+        public EffectsDispatcher(
+            IEnumerable<IEffects<TState, TAction>> allEffects,
+            Store<TState, TAction> store
+        )
         {
             var fallback = Observable.Empty<TAction>();
 
-            dispatches = effects.GetEffects(store.Actions)
+            dispatches = allEffects
+                .SelectMany(effects => effects.GetEffects(store.Actions))
                 .Select(effectsObservable => effectsObservable.Catch(fallback))
                 .ToObservable()
                 .Merge()

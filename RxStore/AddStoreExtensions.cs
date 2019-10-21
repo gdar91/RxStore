@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace RxStore
@@ -24,6 +23,8 @@ namespace RxStore
             services.AddSingleton<IConnectableStore>(provider =>
                 provider.GetRequiredService<SourceStore<TState, TAction>>()
             );
+
+            services.AddSingleton<IEffectsDispatcher, EffectsDispatcher<TState, TAction>>();
 
 
             if (builderAction != null)

@@ -6,7 +6,6 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Reflection;
 using System.Threading;
@@ -16,48 +15,40 @@ namespace RxStore.DevTools
 {
     public sealed class DevTools<TState, TAction> : IEffects<TState, TAction>
     {
-        private readonly IObservable<Unit> interaction;
+        private readonly Store<TState, TAction> store;
 
         private readonly IJSRuntime jsRuntime;
-
-        private readonly string instanceName;
 
 
         public DevTools(Store<TState, TAction> store, IJSRuntime jsRuntime)
         {
+            this.store = store;
             this.jsRuntime = jsRuntime;
-
-            instanceName = $"{typeof(TState).Name}, {typeof(TAction).Name}";
-
-            interaction = Observable.Concat(
-
-                Observable
-                    .Return(store.initialState)
-                    .Select(state => Observable.FromAsync(cancellationToken =>
-                        OnInitialState(state, cancellationToken)
-                    ))
-                    .Concat(),
-
-                store.ActionStates
-                    .Select(tuple => Observable.FromAsync(cancellationToken =>
-                        OnAction(tuple.action, tuple.state, cancellationToken)
-                    ))
-                    .Concat()
-
-            );
         }
 
 
         public IEnumerable<IObservable<TAction>> GetEffects(IObservable<TAction> actions)
         {
 
+            // TODO use switch map when the bug is fixed
             yield return Observable
-                .FromAsync(cancellationToken => IsEnabled(cancellationToken))
-                .Select(enabled => enabled
-                    ? interaction
-                    : Observable.Empty<Unit>()
+                .Merge(
+
+                    Observable
+                        .Return(store.initialState)
+                        .Select(state => Observable.FromAsync(cancellationToken =>
+                            OnInitialState(state, cancellationToken)
+                        ))
+                        .Concat(),
+
+                    store.ActionStates
+                        .Select(tuple => Observable.FromAsync(cancellationToken =>
+                            OnAction(tuple.action, tuple.state, cancellationToken)
+                        ))
+                        .Concat()
+
                 )
-                .Switch()
+                .TakeUntil(Observable.FromAsync(IsEnabled).Where(enabled => !enabled))
                 .IgnoreElementsAs<TAction>();
 
         }
@@ -66,6 +57,8 @@ namespace RxStore.DevTools
 
 
         private const string JsInteropObjectName = "___RxStore___DevTools___";
+        
+        private static readonly string instanceName = $"{typeof(TState).Name}, {typeof(TAction).Name}";
 
         private async Task<bool> IsEnabled(CancellationToken cancellationToken)
         {

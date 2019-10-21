@@ -41,13 +41,13 @@ namespace RxStore
 
 
             actions = actionStates
-                .Select(actionState => actionState.Item1)
+                .Select(actionState => actionState.action)
                 .Publish();
 
             Actions = actions.AsObservable();
 
 
-            states =  actionStates
+            states = actionStates
                 .Select(actionState => actionState.Item2)
                 .StartWith(initialState)
                 .DistinctUntilChanged()
