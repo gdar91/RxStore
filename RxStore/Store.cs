@@ -22,4 +22,10 @@ namespace RxStore
         
         public abstract IDisposable Subscribe(IObserver<TState> observer);
     }
+
+
+    internal interface IConnectableStore : IDisposable
+    {
+        void Connect();
+    }
 }

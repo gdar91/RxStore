@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace RxStore.DevTools
 {
-    public sealed class DevTools<TState, TAction> : Effects<TState, TAction>
+    public sealed class DevTools<TState, TAction> : IEffects<TState, TAction>
     {
         private readonly IObservable<Unit> interaction;
 
@@ -23,7 +23,7 @@ namespace RxStore.DevTools
         private readonly string instanceName;
 
 
-        public DevTools(Store<TState, TAction> store, IJSRuntime jsRuntime) : base(store)
+        public DevTools(Store<TState, TAction> store, IJSRuntime jsRuntime)
         {
             this.jsRuntime = jsRuntime;
 
@@ -48,8 +48,9 @@ namespace RxStore.DevTools
         }
 
 
-        public override IEnumerable<IObservable<TAction>> GetEffects(IObservable<TAction> actions)
+        public IEnumerable<IObservable<TAction>> GetEffects(IObservable<TAction> actions)
         {
+
             yield return Observable
                 .FromAsync(cancellationToken => IsEnabled(cancellationToken))
                 .Select(enabled => enabled
@@ -58,6 +59,7 @@ namespace RxStore.DevTools
                 )
                 .Switch()
                 .IgnoreElementsAs<TAction>();
+
         }
 
 

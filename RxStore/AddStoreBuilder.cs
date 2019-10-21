@@ -46,24 +46,27 @@ namespace RxStore
 
         public AddStoreBuilder<TState, TAction> WithEffects(Type type)
         {
-            services.AddSingleton(typeof(IConnectableEffects), type);
+            services.AddSingleton(typeof(IEffects<TState, TAction>), type);
+            services.AddSingleton<IEffectsDispatcher, EffectsDispatcher<TState, TAction>>();
 
             return this;
         }
 
         public AddStoreBuilder<TState, TAction> WithEffects<TEffects>()
-            where TEffects : Effects<TState, TAction>
+            where TEffects : class, IEffects<TState, TAction>
         {
-            services.AddSingleton<IConnectableEffects, TEffects>();
+            services.AddSingleton<IEffects<TState, TAction>, TEffects>();
+            services.AddSingleton<IEffectsDispatcher, EffectsDispatcher<TState, TAction>>();
 
             return this;
         }
 
         public AddStoreBuilder<TState, TAction> WithEffects(
-            Func<IServiceProvider, Effects<TState, TAction>> implementationFactory
+            Func<IServiceProvider, IEffects<TState, TAction>> implementationFactory
         )
         {
-            services.AddSingleton<IConnectableEffects>(implementationFactory);
+            services.AddSingleton<IEffects<TState, TAction>>(implementationFactory);
+            services.AddSingleton<IEffectsDispatcher, EffectsDispatcher<TState, TAction>>();
 
             return this;
         }

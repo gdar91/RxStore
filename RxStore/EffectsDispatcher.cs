@@ -1,23 +1,26 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 namespace RxStore
 {
-    public abstract class Effects<TState, TAction> : IConnectableEffects
+    internal interface IEffectsDispatcher : IDisposable
     {
-        private readonly IConnectableObservable<TAction> effects;
+        void Connect();
+    }
+
+    internal sealed class EffectsDispatcher<TState, TAction> : IEffectsDispatcher
+    {
+        private readonly IConnectableObservable<TAction> dispatches;
 
         private IDisposable connection;
 
-
-        protected Effects(Store<TState, TAction> store)
+        public EffectsDispatcher(IEffects<TState, TAction> effects, Store<TState, TAction> store)
         {
             var fallback = Observable.Empty<TAction>();
 
-            effects = GetEffects(store.Actions)
+            dispatches = effects.GetEffects(store.Actions)
                 .Select(effectsObservable => effectsObservable.Catch(fallback))
                 .ToObservable()
                 .Merge()
@@ -25,15 +28,11 @@ namespace RxStore
                 .Publish();
         }
 
-
-        public abstract IEnumerable<IObservable<TAction>> GetEffects(IObservable<TAction> actions);
-
-
-        void IConnectable.Connect()
+        public void Connect()
         {
             lock (this)
             {
-                connection = connection ?? effects.Connect();
+                connection = connection ?? dispatches.Connect();
             }
         }
 

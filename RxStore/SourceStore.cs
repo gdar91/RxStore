@@ -52,7 +52,7 @@ namespace RxStore
         public override IDisposable Subscribe(IObserver<TState> observer) => states.Subscribe(observer);
 
 
-        void IConnectable.Connect()
+        void IConnectableStore.Connect()
         {
             lock (this)
             {

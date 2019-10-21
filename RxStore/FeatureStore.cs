@@ -69,7 +69,7 @@ namespace RxStore
             => states.Subscribe(observer);
 
 
-        void IConnectable.Connect()
+        void IConnectableStore.Connect()
         {
             lock (this)
             {

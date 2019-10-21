@@ -37,14 +37,19 @@ namespace RxStore
 
         public static void ConnectStore(this IServiceProvider serviceProvider)
         {
-            var connectables = Enumerable.Concat<IConnectable>(
-                serviceProvider.GetServices<IConnectableEffects>(),
-                serviceProvider.GetServices<IConnectableStore>()
-            );
+            var effectsDispatchers = serviceProvider.GetServices<IEffectsDispatcher>();
 
-            foreach (var connectable in connectables)
+            foreach (var effectsDispatcher in effectsDispatchers)
             {
-                connectable.Connect();
+                effectsDispatcher.Connect();
+            }
+
+
+            var connectableStores = serviceProvider.GetServices<IConnectableStore>();
+
+            foreach (var connectableStore in connectableStores)
+            {
+                connectableStore.Connect();
             }
         }
     }
