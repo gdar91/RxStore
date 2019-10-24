@@ -30,21 +30,13 @@ namespace RxStore.DevTools
         public IEnumerable<IObservable<TAction>> GetEffects(IObservable<TAction> actions)
         {
 
-            yield return Observable
-                .Concat(
-
-                    Observable
-                        .Return(store.initialState)
-                        .Select(state => Observable.FromAsync(cancellationToken =>
-                            OnInitialState(state, cancellationToken)
-                        )),
-
-                    store.ActionStates
-                        .Select(tuple => Observable.FromAsync(cancellationToken =>
-                            OnAction(tuple.action, tuple.state, cancellationToken)
-                        ))
-
-                )
+            yield return store.ActionStates
+                .Select(tuple => Observable.FromAsync(cancellationToken =>
+                    OnAction(tuple.action, tuple.state, cancellationToken)
+                ))
+                .StartWith(Observable.FromAsync(cancellationToken =>
+                    OnInitialState(store.initialState, cancellationToken)
+                ))
                 .Concat()
                 .TakeWhile(success => success)
                 .IgnoreElementsAs<TAction>();
