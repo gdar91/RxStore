@@ -30,25 +30,23 @@ namespace RxStore.DevTools
         public IEnumerable<IObservable<TAction>> GetEffects(IObservable<TAction> actions)
         {
 
-            // TODO use switch map when the bug is fixed
             yield return Observable
-                .Merge(
+                .Concat(
 
                     Observable
                         .Return(store.initialState)
                         .Select(state => Observable.FromAsync(cancellationToken =>
                             OnInitialState(state, cancellationToken)
-                        ))
-                        .Concat(),
+                        )),
 
                     store.ActionStates
                         .Select(tuple => Observable.FromAsync(cancellationToken =>
                             OnAction(tuple.action, tuple.state, cancellationToken)
                         ))
-                        .Concat()
 
                 )
-                .TakeUntil(Observable.FromAsync(IsEnabled).Where(enabled => !enabled))
+                .Concat()
+                .TakeWhile(success => success)
                 .IgnoreElementsAs<TAction>();
 
         }
@@ -60,19 +58,12 @@ namespace RxStore.DevTools
         
         private static readonly string instanceName = $"{typeof(TState).Name}, {typeof(TAction).Name}";
 
-        private async Task<bool> IsEnabled(CancellationToken cancellationToken)
-        {
-            return await jsRuntime.InvokeAsync<bool>(
-                $"{JsInteropObjectName}.{nameof(IsEnabled)}",
-                cancellationToken
-            );
-        }
 
-        private async Task OnInitialState(TState state, CancellationToken cancellationToken)
+        private async Task<bool> OnInitialState(TState state, CancellationToken cancellationToken)
         {
             var stateJson = JsonOfState(state);
 
-            await jsRuntime.InvokeVoidAsync(
+            return await jsRuntime.InvokeAsync<bool>(
                 $"{JsInteropObjectName}.{nameof(OnInitialState)}",
                 cancellationToken,
                 instanceName,
@@ -80,12 +71,12 @@ namespace RxStore.DevTools
             );
         }
 
-        private async Task OnAction(TAction action, TState state, CancellationToken cancellationToken)
+        private async Task<bool> OnAction(TAction action, TState state, CancellationToken cancellationToken)
         {
             var actionJson = JsonOfAction(action);
             var stateJson = JsonOfState(state);
 
-            await jsRuntime.InvokeVoidAsync(
+            return await jsRuntime.InvokeAsync<bool>(
                 $"{JsInteropObjectName}.{nameof(OnAction)}",
                 cancellationToken,
                 instanceName,
