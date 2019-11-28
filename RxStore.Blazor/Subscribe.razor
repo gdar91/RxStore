@@ -1,0 +1,71 @@
+﻿@namespace RxStore
+
+@using System.Reactive.Linq
+@using System.Reactive.Subjects
+
+@typeparam TElement
+
+@implements IDisposable
+
+
+@if (available)
+{
+    @ChildContent(element)
+}
+
+
+@code
+{
+    private readonly ISubject<IObservable<TElement>> sources = new Subject<IObservable<TElement>>();
+
+    private IDisposable sourcesConnection;
+
+    private TElement element;
+
+    private bool available = false;
+
+
+    [Parameter]
+    public IObservable<TElement> To { set => UpdateSource(value); }
+
+    [Parameter]
+    public RenderFragment<TElement> ChildContent { get; set; }
+
+
+    private void UpdateSource(IObservable<TElement> rawSource)
+    {
+        lock (sources)
+        {
+            if (sourcesConnection == null)
+            {
+                sourcesConnection = sources
+                    .Switch()
+                    .Do(UpdateElement)
+                    .Publish()
+                    .Connect();
+            }
+        }
+
+        var source = rawSource == null
+            ? Observable.Never<TElement>()
+            : rawSource.Catch<TElement, Exception>(e => Observable.Empty<TElement>());
+
+        sources.OnNext(source);
+    }
+
+    private void UpdateElement(TElement newElement)
+    {
+        InvokeAsync(() =>
+        {
+            element = newElement;
+            available = true;
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        using (var resource = sourcesConnection)
+        { }
+    }
+}

@@ -1,0 +1,14 @@
+﻿@namespace RxStore
+
+@inject IEnumerable<IDevToolsConnection> AllDevToolsConnections
+
+@code
+{
+    protected override void OnInitialized()
+    {
+        foreach (var devToolsConnection in AllDevToolsConnections)
+        {
+            devToolsConnection.Start();
+        }
+    }
+}
