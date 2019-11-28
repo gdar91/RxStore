@@ -1,14 +1,39 @@
-﻿@namespace RxStore
+﻿@using Microsoft.JSInterop
 
-@inject IEnumerable<IDevToolsConnection> AllDevToolsConnections
+@namespace RxStore
+
+@typeparam TStore
+
+@implements IDisposable
+
+@inject IJSRuntime JsRuntime
+@inject TStore Store
 
 @code
 {
+    private IDisposable connection;
+
+
     protected override void OnInitialized()
     {
-        foreach (var devToolsConnection in AllDevToolsConnections)
-        {
-            devToolsConnection.Start();
-        }
+        var devToolsInterop = CreateDevToolsInterop();
+        var observable = devToolsInterop.CreateObservable();
+
+        connection = observable.Connect();
+    }
+
+    public void Dispose()
+    {
+        using var resource = connection;
+    }
+
+    private IDevToolsInterop CreateDevToolsInterop()
+    {
+        var devToolsInterop = (IDevToolsInterop) typeof(DevToolsInterop<,,>)
+            .MakeGenericType(typeof(TStore), Store.StateType, Store.ActionType)
+            .GetConstructor(new[] { typeof(IJSRuntime), typeof(TStore), typeof(string) })
+            .Invoke(new object[] { JsRuntime, Store, typeof(TStore).Name });
+        
+        return devToolsInterop;
     }
 }
