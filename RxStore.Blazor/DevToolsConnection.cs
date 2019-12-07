@@ -15,34 +15,18 @@ using Newtonsoft.Json.Linq;
 
 namespace RxStore
 {
-    internal interface IDevToolsInterop
-    {
-        IConnectableObservable<Unit> CreateObservable();
-    }
-
-    internal class DevToolsInterop<TStore, TState, TAction> : IDevToolsInterop
-        where TStore : Store<TState, TAction>
+    internal static class DevToolsConnection<TStore, TState, TAction> where TStore : Store<TState, TAction>
     {
         private const string JsInteropObjectName = "___RxStore___DevTools___";
 
-
-        private readonly IJSRuntime jsRuntime;
-
-        private readonly TStore store;
-
-        private readonly string instanceName;
-
-
-        public DevToolsInterop(IJSRuntime jsRuntime, TStore store, string instanceName)
+        public static IConnectableObservable<Unit> CreateObservable(
+            IJSRuntime jSRuntime,
+            TStore store
+        )
         {
-            this.jsRuntime = jsRuntime;
-            this.store = store;
-            this.instanceName = instanceName;
-        }
+            var instanceName = typeof(TStore).Name;
 
-
-        public IConnectableObservable<Unit> CreateObservable() =>
-            store.OutStateTransitions
+            return store.OutStateTransitions
                 .Select(next => Observable.FromAsync(cancellationToken => next switch
                 {
                     Store<TState, TAction>.StateTransition.Initial { State: var state } =>
@@ -58,30 +42,32 @@ namespace RxStore
                 .IgnoreElements()
                 .Publish();
 
-        private async Task<bool> OnInitialState(TState state, CancellationToken cancellationToken)
-        {
-            var stateJson = JsonOfState(state);
 
-            return await jsRuntime.InvokeAsync<bool>(
-                $"{JsInteropObjectName}.{nameof(OnInitialState)}",
-                cancellationToken,
-                instanceName,
-                stateJson
-            );
-        }
+            async Task<bool> OnInitialState(TState state, CancellationToken cancellationToken)
+            {
+                var stateJson = JsonOfState(state);
 
-        private async Task<bool> OnAction(TState state, TAction action, CancellationToken cancellationToken)
-        {
-            var actionJson = JsonOfAction(action);
-            var stateJson = JsonOfState(state);
+                return await jSRuntime.InvokeAsync<bool>(
+                    $"{JsInteropObjectName}.{nameof(OnInitialState)}",
+                    cancellationToken,
+                    instanceName,
+                    stateJson
+                );
+            }
 
-            return await jsRuntime.InvokeAsync<bool>(
-                $"{JsInteropObjectName}.{nameof(OnAction)}",
-                cancellationToken,
-                instanceName,
-                actionJson,
-                stateJson
-            );
+            async Task<bool> OnAction(TState state, TAction action, CancellationToken cancellationToken)
+            {
+                var actionJson = JsonOfAction(action);
+                var stateJson = JsonOfState(state);
+
+                return await jSRuntime.InvokeAsync<bool>(
+                    $"{JsInteropObjectName}.{nameof(OnAction)}",
+                    cancellationToken,
+                    instanceName,
+                    actionJson,
+                    stateJson
+                );
+            }
         }
 
 
@@ -98,10 +84,10 @@ namespace RxStore
         private static readonly JsonSerializer Serializer = JsonSerializer.Create(SerializerSettings);
 
 
-        private static string JsonOfState(TState state) =>
+        public static string JsonOfState(TState state) =>
             JsonConvert.SerializeObject(state, SerializerSettings);
 
-        private static string JsonOfAction(TAction action)
+        public static string JsonOfAction(TAction action)
         {
             var (typeNames, type, value) = TypeNameHierarchyOfAction(
                 new List<string>(),
@@ -137,7 +123,7 @@ namespace RxStore
             return actionJson;
         }
 
-        private static (List<string>, Type, object) TypeNameHierarchyOfAction(
+        public static (List<string>, Type, object) TypeNameHierarchyOfAction(
             List<string> typeNames,
             Type type,
             object value
@@ -145,7 +131,10 @@ namespace RxStore
         {
             const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic;
 
-            if (!FSharpType.IsUnion(type, bindingFlags) || type.Namespace.StartsWith(nameof(Microsoft)))
+            if (
+                !FSharpType.IsUnion(type, bindingFlags) ||
+                type.Namespace.StartsWith(nameof(Microsoft))
+            )
             {
                 return (typeNames, type, value);
             }
