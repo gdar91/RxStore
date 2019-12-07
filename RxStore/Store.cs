@@ -31,6 +31,10 @@ namespace RxStore
 
         private readonly Func<TAction, Unit> dispatch;
 
+        private readonly IObservable<StateTransition> outStateTransitions;
+
+        private readonly Subject<Unit> interactions = new Subject<Unit>();
+
 
         internal Store(IObservable<StateTransition> stateTransitions, Func<TAction, Unit> dispatch)
             : base(typeof(TState), typeof(TAction))
@@ -52,15 +56,23 @@ namespace RxStore
                 .Select(stateTransition => stateTransition.Action)
                 .Publish()
                 .AutoConnect(0);
+            
 
-            var fallback = Observable.Empty<TAction>();
+            interactions
+                .Take(1)
+                .Do(interaction =>
+                {
+                    var fallback = Observable.Empty<TAction>();
 
-            Effects(actions)
-                .Where(effects => effects != null)
-                .Select(effects => effects.Catch(fallback))
-                .ToObservable()
-                .Merge()
-                .Do(action => Task.Run(() => dispatch(action)))
+                    Effects(actions)
+                        .Where(effects => effects != null)
+                        .Select(effects => effects.Catch(fallback))
+                        .ToObservable()
+                        .Merge()
+                        .Do(action => Task.Run(() => dispatch(action)))
+                        .Publish()
+                        .AutoConnect(0);
+                })
                 .Publish()
                 .AutoConnect(0);
 
@@ -68,7 +80,7 @@ namespace RxStore
             this.dispatch = dispatch;
 
 
-            OutStateTransitions = this.stateTransitions
+            outStateTransitions = this.stateTransitions
                 .Replay(1)
                 .AutoConnect(0);
         }
@@ -111,15 +123,33 @@ namespace RxStore
         }
 
 
-        internal IObservable<StateTransition> OutStateTransitions { get; }
+        internal IObservable<StateTransition> OutStateTransitions
+        {
+            get
+            {
+                interactions.OnNext(Unit.Default);
+
+                return outStateTransitions;
+            }
+        }
 
 
         protected virtual IEnumerable<IObservable<TAction>> Effects(IObservable<TAction> actions) =>
             Enumerable.Empty<IObservable<TAction>>();
 
-        public Unit Dispatch(TAction action) => dispatch(action);
+        public Unit Dispatch(TAction action)
+        {
+            interactions.OnNext(Unit.Default);
 
-        public IDisposable Subscribe(IObserver<TState> observer) => states.Subscribe(observer);
+            return dispatch(action);
+        }
+
+        public IDisposable Subscribe(IObserver<TState> observer)
+        {
+            interactions.OnNext(Unit.Default);
+
+            return states.Subscribe(observer);
+        }
 
 
 
