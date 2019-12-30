@@ -121,30 +121,56 @@ module EntitySet =
         | Some _
         | None -> entitySet |> Map.add key stamp
 
+    let private withMany func { Time = time; Item = map } entitySet =
+        map
+        |> Map.fold
+            (fun entitySet key item -> entitySet |> func key { Time = time; Item = item })
+            entitySet        
+
+
     let without key entitySet = entitySet |> Map.remove key
+
+    let withoutMany keys entitySet =
+        keys |> Set.fold (fun entitySet key -> entitySet |> without key) entitySet
+
 
     let withPending key stamp entitySet =
         withStamp key (stamp |> Stamp.mapTo Pending) entitySet
 
+    let withManyPending stamp entitySet =
+        withMany withPending stamp entitySet    
+
+
     let withCompleted key stamp entitySet =
-        withStamp key (stamp |> Stamp.map Completed) entitySet    
+        withStamp key (stamp |> Stamp.map Completed) entitySet
+
+    let withManyCompleted stamp entitySet =
+        withMany withCompleted stamp entitySet    
+
 
     let withFailed key stamp entitySet =
         withCompleted key (stamp |> Stamp.map Error) entitySet
 
+    let withManyFailed stamp entitySet =
+        withMany withFailed stamp entitySet    
+
+
     let withSuccessful key stamp entitySet =
         withCompleted key (stamp |> Stamp.map Ok) entitySet
-    
+
+    let withManySuccessful stamp entitySet =
+        withMany withSuccessful stamp entitySet
+
+
     let withAbsent key stamp entitySet =
         withSuccessful key (stamp |> Stamp.mapTo None) entitySet
+
+    let withManyAbsent stamp entitySet =
+        withMany withAbsent stamp entitySet    
+
 
     let withPresent key stamp entitySet =
         withSuccessful key (stamp |> Stamp.map Some) entitySet
 
-    let withManyPresent { Time = time; Item = map } entitySet =
-        map
-        |> Map.fold
-            (fun entitySet key data ->
-                entitySet
-                |> withPresent key { Time = time; Item = data })
-            entitySet
+    let withManyPresent stamp entitySet =
+        withMany withPresent stamp entitySet

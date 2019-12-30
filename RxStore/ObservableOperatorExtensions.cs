@@ -45,6 +45,15 @@ namespace RxStore
         }
 
 
+        public static IObservable<TElement> Catch<TElement>(
+            this IObservable<TElement> source,
+            Func<Exception, IObservable<TElement>> handler
+        )
+        {
+            return source.Catch<TElement, Exception>(handler);
+        }
+
+
         public static IObservable<object> ElementsAsObjects<TElement>(this IObservable<TElement> source) =>
             source.Select(next => next as object);
 
