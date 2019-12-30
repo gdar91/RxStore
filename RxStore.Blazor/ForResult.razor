@@ -1,0 +1,30 @@
+﻿@namespace RxStore
+
+@using Microsoft.FSharp.Core
+
+
+@typeparam TOk
+@typeparam TError
+
+
+@if (Of.IsOk)
+{
+    @WhenOk(Of.ResultValue)
+}
+else if (Of.IsError)
+{
+    @WhenError(Of.ErrorValue)
+}
+
+
+@code
+{
+    [Parameter]
+    public FSharpResult<TOk, TError> Of { get; set; }
+
+    [Parameter]
+    public RenderFragment<TOk> WhenOk { get; set; }
+
+    [Parameter]
+    public RenderFragment<TError> WhenError { get; set; }
+}

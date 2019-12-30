@@ -23,6 +23,28 @@ namespace RxStore
             source.Replay(1).RefCount();
 
 
+        public static IObservable<TResult> BisectAt<TElement, TSeparator, TResult>(
+            this IObservable<TElement> source,
+            IObservable<TSeparator> separators,
+            Func<IObservable<TElement>, IObservable<TResult>> leftSelector,
+            Func<IObservable<TElement>, IObservable<TResult>> rightSelector
+        )
+        {
+            return source
+                .Window(
+                    separators
+                        .Take(1)
+                        .Concat(Observable.Never<TSeparator>())
+                )
+                .Select((window, index) =>
+                    index == 0
+                        ? leftSelector(window)
+                        : rightSelector(window)
+                )
+                .Concat();
+        }
+
+
         public static IObservable<object> ElementsAsObjects<TElement>(this IObservable<TElement> source) =>
             source.Select(next => next as object);
 

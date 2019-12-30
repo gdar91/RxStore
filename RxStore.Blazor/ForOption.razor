@@ -1,0 +1,29 @@
+﻿@namespace RxStore
+
+@using Microsoft.FSharp.Core
+
+
+@typeparam T
+
+
+@if (FSharpOption<T>.get_IsSome(Of))
+{
+    @WhenSome(Of.Value)
+}
+else if (FSharpOption<T>.get_IsNone(Of))
+{
+    @WhenNone
+}
+
+
+@code
+{
+    [Parameter]
+    public FSharpOption<T> Of { get; set; }
+
+    [Parameter]
+    public RenderFragment<T> WhenSome { get; set; }
+
+    [Parameter]
+    public RenderFragment WhenNone { get; set; }
+}

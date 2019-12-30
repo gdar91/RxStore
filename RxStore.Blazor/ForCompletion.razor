@@ -1,0 +1,31 @@
+﻿@namespace RxStore
+
+@using RxStore.Entity
+
+
+@typeparam T
+
+
+@switch (Of)
+{
+    case var completion when completion.IsPending:
+        @WhenPending
+        break;
+
+    case Completion<T>.Completed @case:
+        @WhenCompleted(@case.Item)
+        break;
+}
+
+
+@code
+{
+    [Parameter]
+    public Completion<T> Of { get; set; }
+
+    [Parameter]
+    public RenderFragment WhenPending { get; set; }
+
+    [Parameter]
+    public RenderFragment<T> WhenCompleted { get; set; }
+}

@@ -1,68 +1,69 @@
-window.___RxStore___DevTools___ =
-    '__REDUX_DEVTOOLS_EXTENSION__' in window
-        ? whenAvailable()
-        : whenNotAvailable();
+(function() {
+    window.___RxStore___DevTools___ =
+        '__REDUX_DEVTOOLS_EXTENSION__' in window
+            ? whenExtensionAvailable()
+            : whenExtensionNotAvailable();
 
 
-function whenAvailable() {
-    return {
-        connections: { },
+    function whenExtensionAvailable() {
+        return {
+            connections: { },
 
-        OnInitialState(instanceName, stateJson) {
-            if (!!this.connections[instanceName]) {
-                return false;
-            }
-
-            const options = {
-                name: instanceName,
-                features: {
-                    pause: false,
-                    lock: false,
-                    persist: false,
-                    export: false,
-                    import: false,
-                    jump: false,
-                    skip: false,
-                    reorder: false,
-                    dispatch: false,
-                    test: false
+            OnInitialState(instanceName, stateJson) {
+                if (!!this.connections[instanceName]) {
+                    return false;
                 }
-            };
 
-            this.connections[instanceName] = window.__REDUX_DEVTOOLS_EXTENSION__.connect(options);
+                const options = {
+                    name: instanceName,
+                    features: {
+                        pause: false,
+                        lock: false,
+                        persist: false,
+                        export: false,
+                        import: false,
+                        jump: false,
+                        skip: false,
+                        reorder: false,
+                        dispatch: false,
+                        test: false
+                    }
+                };
 
-            const state = JSON.parse(stateJson);
+                this.connections[instanceName] = window.__REDUX_DEVTOOLS_EXTENSION__.connect(options);
 
-            this.connections[instanceName].init(state);
+                const state = JSON.parse(stateJson);
 
-            return true;
-        },
+                this.connections[instanceName].init(state);
 
-        OnAction(instanceName, actionJson, stateJson) {
-            if (!this.connections[instanceName]) {
+                return true;
+            },
+
+            OnAction(instanceName, actionJson, stateJson) {
+                if (!this.connections[instanceName]) {
+                    return false;
+                }
+
+                const action = JSON.parse(actionJson);
+                const state = JSON.parse(stateJson);
+
+                this.connections[instanceName].send(action, state);
+
+                return true;
+            }
+        };
+    }
+
+
+    function whenExtensionNotAvailable() {
+        return {
+            OnInitialState(instanceName, stateJson) {
+                return false;
+            },
+
+            OnAction(instanceName, actionJson, stateJson) {
                 return false;
             }
-
-            const action = JSON.parse(actionJson);
-            const state = JSON.parse(stateJson);
-
-            this.connections[instanceName].send(action, state);
-
-            return true;
-        }
-    };
-}
-
-
-function whenNotAvailable() {
-    return {
-        OnInitialState(instanceName, stateJson) {
-            return false;
-        },
-
-        OnAction(instanceName, actionJson, stateJson) {
-            return false;
-        }
-    };
-}
-
+        };
+    }
+})();
