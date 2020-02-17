@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29721.120
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxStore", "RxStore\RxStore.csproj", "{D3539009-3233-47C6-A9A9-875A6798EA6F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RxStore", "RxStore\RxStore.csproj", "{D3539009-3233-47C6-A9A9-875A6798EA6F}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "RxStore.Entity", "RxStore.Entity\RxStore.Entity.fsproj", "{528697F1-76B1-4019-B00C-99BA57FA031C}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "RxStore.Entity.Core", "RxStore.Entity.Core\RxStore.Entity.Core.fsproj", "{528697F1-76B1-4019-B00C-99BA57FA031C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxStore.Blazor", "RxStore.Blazor\RxStore.Blazor.csproj", "{16675E7B-F2AA-4F37-89B9-564E42630F99}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RxStore.Blazor", "RxStore.Blazor\RxStore.Blazor.csproj", "{16675E7B-F2AA-4F37-89B9-564E42630F99}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxStore.Entity", "RxStore.Entity\RxStore.Entity.csproj", "{14F0487F-6F79-47B8-8132-11E8E9C70441}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,9 +19,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{D3539009-3233-47C6-A9A9-875A6798EA6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -58,5 +57,23 @@ Global
 		{16675E7B-F2AA-4F37-89B9-564E42630F99}.Release|x64.Build.0 = Release|Any CPU
 		{16675E7B-F2AA-4F37-89B9-564E42630F99}.Release|x86.ActiveCfg = Release|Any CPU
 		{16675E7B-F2AA-4F37-89B9-564E42630F99}.Release|x86.Build.0 = Release|Any CPU
+		{14F0487F-6F79-47B8-8132-11E8E9C70441}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14F0487F-6F79-47B8-8132-11E8E9C70441}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14F0487F-6F79-47B8-8132-11E8E9C70441}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{14F0487F-6F79-47B8-8132-11E8E9C70441}.Debug|x64.Build.0 = Debug|Any CPU
+		{14F0487F-6F79-47B8-8132-11E8E9C70441}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{14F0487F-6F79-47B8-8132-11E8E9C70441}.Debug|x86.Build.0 = Debug|Any CPU
+		{14F0487F-6F79-47B8-8132-11E8E9C70441}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14F0487F-6F79-47B8-8132-11E8E9C70441}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14F0487F-6F79-47B8-8132-11E8E9C70441}.Release|x64.ActiveCfg = Release|Any CPU
+		{14F0487F-6F79-47B8-8132-11E8E9C70441}.Release|x64.Build.0 = Release|Any CPU
+		{14F0487F-6F79-47B8-8132-11E8E9C70441}.Release|x86.ActiveCfg = Release|Any CPU
+		{14F0487F-6F79-47B8-8132-11E8E9C70441}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B57AC063-6D8F-4C2C-8D83-1BF4D251BCC9}
 	EndGlobalSection
 EndGlobal

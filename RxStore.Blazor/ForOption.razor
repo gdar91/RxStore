@@ -8,11 +8,17 @@
 
 @if (FSharpOption<T>.get_IsSome(Of))
 {
-    @WhenSome(Of.Value)
+    if (WhenSome != null)
+    {
+        @WhenSome(Of.Value)
+    }
 }
 else if (FSharpOption<T>.get_IsNone(Of))
 {
-    @WhenNone
+    if (WhenNone != null)
+    {
+        @WhenNone
+    }
 }
 
 

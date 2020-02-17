@@ -10,7 +10,10 @@
 
 @if (available)
 {
-    @ChildContent(element)
+    if (ChildContent != null)
+    {
+        @ChildContent(element)
+    }
 }
 
 
@@ -29,7 +32,7 @@
     public IObservable<TElement> To { set => UpdateSource(value); }
 
     [Parameter]
-    public RenderFragment<TElement> ChildContent { get; set; }
+    public RenderFragment<TElement> ChildContent { get; set; } // TODO if null
 
 
     private void UpdateSource(IObservable<TElement> rawSource)

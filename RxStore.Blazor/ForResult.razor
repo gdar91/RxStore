@@ -9,11 +9,17 @@
 
 @if (Of.IsOk)
 {
-    @WhenOk(Of.ResultValue)
+    if (WhenOk != null)
+    {
+        @WhenOk(Of.ResultValue)
+    }
 }
 else if (Of.IsError)
 {
-    @WhenError(Of.ErrorValue)
+    if (WhenError != null)
+    {
+        @WhenError(Of.ErrorValue)
+    }
 }
 
 

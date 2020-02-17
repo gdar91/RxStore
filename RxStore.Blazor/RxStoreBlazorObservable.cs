@@ -17,7 +17,11 @@ namespace RxStore
 
                 hubConnection.Closed += e =>
                 {
-                    if (e != null)
+                    if (e == null)
+                    {
+                        observer.OnCompleted();
+                    }
+                    else
                     {
                         observer.OnError(e);
                     }

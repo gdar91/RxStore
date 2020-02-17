@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -6,13 +6,14 @@
     <Version>0.14.0</Version>
     <Authors>Giorgi Darchiashvili</Authors>
     <Company>MIA LEPL 112</Company>
-    <Description>Predictable state container on Rx.NET.</Description>
+    <Description>Strongly-typed client-side entity management for RxStore.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/gdar91/RxStore</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Reactive" Version="4.3.2" />
+    <ProjectReference Include="..\RxStore\RxStore.csproj" />
+    <ProjectReference Include="..\RxStore.Entity.Core\RxStore.Entity.Core.fsproj" />
   </ItemGroup>
-  
+
 </Project>

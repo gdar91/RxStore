@@ -9,11 +9,17 @@
 @switch (Of)
 {
     case var completion when completion.IsPending:
-        @WhenPending
+        if (WhenPending != null)
+        {
+            @WhenPending
+        }
         break;
 
     case Completion<T>.Completed @case:
-        @WhenCompleted(@case.Item)
+        if (WhenCompleted != null)
+        {
+            @WhenCompleted(@case.Item)
+        }
         break;
 }
 
