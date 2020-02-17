@@ -10,6 +10,40 @@ namespace RxStore.Entity
 {
     public static class Querier
     {
+        public static IObservable<FSharpOption<EntityInfo<T>>> UsingQuerier<T>(
+            this IObservable<FSharpOption<EntityInfo<T>>> entityInfoOptions,
+            TimeSpan retryInterval,
+            TimeSpan refreshInterval,
+            Func<RxUnit> fetch
+        )
+        {
+            var passive = entityInfoOptions.ShareReplayLatest();
+            var querier = ForEntityInfo(passive, retryInterval, refreshInterval, fetch);
+
+            return Observable.Using(querier.Subscribe, subscription => passive);
+        }
+
+        public static IObservable<FSharpOption<EntityInfo<T>>> UsingQuerier<T>(
+            this IObservable<FSharpOption<EntityInfo<T>>> entityInfoOptions,
+            Func<
+                IObservable<FsUnit>,
+                IObservable<Stamp<FsUnit>>,
+                IObservable<Stamp<string>>,
+                IObservable<Stamp<T>>,
+                IObservable<FsUnit>
+            > signals,
+            Func<RxUnit> fetch
+        )
+        {
+            var passive = entityInfoOptions.ShareReplayLatest();
+            var querier = ForEntityInfo(passive, signals, fetch);
+
+            return Observable.Using(querier.Subscribe, subscription => passive);
+        }
+
+
+
+
         public static IObservable<RxUnit> ForEntityInfo<T>(
             IObservable<FSharpOption<EntityInfo<T>>> entityInfoOptions,
             TimeSpan retryInterval,
