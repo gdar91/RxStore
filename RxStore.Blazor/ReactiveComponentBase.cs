@@ -22,22 +22,23 @@ namespace RxStore
         public ReactiveComponentBase()
         {
             Initializes = initializesSubject
-                .TakeUntil(disposesSubject)
+                .Take(1)
                 .Publish()
                 .AutoConnect(0);
-            
+
+            Disposes = disposesSubject
+                .Take(1)
+                .Publish()
+                .AutoConnect(2);
+
+
             ParametersSets = parametersSetsSubject
-                .TakeUntil(disposesSubject)
+                .TakeUntil(Disposes)
                 .Publish()
                 .AutoConnect(0);
             
             AfterRenders = afterRendersSubject
-                .TakeUntil(disposesSubject)
-                .Publish()
-                .AutoConnect(0);
-            
-            Disposes = disposesSubject
-                .Take(1)
+                .TakeUntil(Disposes)
                 .Publish()
                 .AutoConnect(0);
         }

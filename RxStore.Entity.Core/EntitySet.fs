@@ -12,7 +12,7 @@ and Key = System.Guid
 
 module EntitySet =
 
-    [<CompiledName("Empty")>]
+    [<CompiledName "Empty">]
     let empty<'Key, 'Value when 'Key : comparison> : EntitySet<'Key, 'Value> =
         EntitySet (Map.empty)
 
@@ -24,17 +24,17 @@ module EntitySet =
         |> Map.ofSeq
 
 
-    [<CompiledName("One")>]
+    [<CompiledName "One">]
     let one key (EntitySet map) = map |> Map.tryFind key
 
-    [<CompiledName("Many")>]
+    [<CompiledName "Many">]
     let many (EntitySet map) = map
 
 
-    [<CompiledName("OneCompleted")>]
-    let oneCompleted key (EntitySet map) =
-        map
-        |> Map.tryFind key
+    [<CompiledName "OneCompleted">]
+    let oneCompleted key entitySet =
+        entitySet
+        |> one key
         |> Option.bind (fun entityInfo -> entityInfo.LatestCompletedOption)
 
     let private manyCompletedSeq seq =
@@ -42,13 +42,13 @@ module EntitySet =
         |> Seq.choose
             (fun (key, entityInfo) ->
                 entityInfo.LatestCompletedOption
-                |> Option.map (fun latestCompletedOption -> key, latestCompletedOption))
+                |> Option.map (fun completedEntityInfo -> key, completedEntityInfo))
 
-    [<CompiledName("ManyCompleted")>]
+    [<CompiledName "ManyCompleted">]
     let manyCompleted entitySet = entitySet |> mapApplyFuncAsSeq manyCompletedSeq
 
 
-    [<CompiledName("OneSuccessful")>]
+    [<CompiledName "OneSuccessful">]
     let oneSuccessful key entitySet =
         entitySet
         |> oneCompleted key
@@ -60,13 +60,13 @@ module EntitySet =
         |> Seq.choose
             (fun (key, completedEntityInfo) ->
                 completedEntityInfo.LatestSuccessfulOption
-                |> Option.map (fun latestSuccessfulOption -> key, latestSuccessfulOption))
+                |> Option.map (fun stamp -> key, stamp))
 
-    [<CompiledName("ManySuccessful")>]
+    [<CompiledName "ManySuccessful">]
     let manySuccessful entitySet = entitySet|> mapApplyFuncAsSeq manySuccessfulSeq
 
 
-    [<CompiledName("OnePresent")>]
+    [<CompiledName "OnePresent">]
     let onePresent key entitySet =
         entitySet
         |> oneSuccessful key
@@ -85,90 +85,139 @@ module EntitySet =
                 | Some item -> Some (key, stamp |> Stamp.mapTo item)
                 | None -> None)
 
-    [<CompiledName("ManyPresent")>]
+    [<CompiledName "ManyPresent">]
     let manyPresent entitySet = entitySet |> mapApplyFuncAsSeq manyPresentSeq
 
 
 
 
-    let private withManyFunc func stamp entitySet =
+    let private withManyFunc func stamp (EntitySet map) =
         stamp.Item
         |> Map.fold
-            (fun entitySet key item -> entitySet |> func key (stamp |> Stamp.mapTo item))
-            entitySet
+            (fun map key item -> map |> func key (stamp |> Stamp.mapTo item))
+            map
 
 
-    [<CompiledName("WithOne")>]
+    let private mapWithOne key stamp map =
+        map
+        |> Map.tryFind key
+        |> EntityInfo.optionWithValue stamp
+        |> fun entityInfo -> map |> Map.add key entityInfo
+
+    [<CompiledName "WithOne">]
     let withOne key stamp (EntitySet map) =
-        match map |> Map.tryFind key with
-        | Some entityInfo -> entityInfo |> EntityInfo.withValue stamp
-        | None -> EntityInfo.ofValue stamp
-        |> fun entityInfo -> map |> Map.add key entityInfo
+        map
+        |> mapWithOne key stamp
         |> EntitySet
 
-    [<CompiledName("WithMany")>]
-    let withMany stamp entitySet = entitySet |> withManyFunc withOne stamp
+    [<CompiledName "WithMany">]
+    let withMany stamp entitySet =
+        (stamp, entitySet) ||> withManyFunc mapWithOne
 
 
-    [<CompiledName("WithOnePending")>]
+    let private mapWithoutOne key map = map |> Map.remove key
+
+    [<CompiledName "WithoutOne">]
+    let withoutOne key (EntitySet map) =
+        map
+        |> mapWithoutOne key
+        |> EntitySet
+
+    let withoutMany keys (EntitySet map) =
+        keys |> Seq.fold (fun map key -> map |> mapWithoutOne key) map
+
+
+    let private mapWithOnePending key stamp map =
+        map
+        |> Map.tryFind key
+        |> EntityInfo.optionWithPending stamp
+        |> fun entityInfo -> map |> Map.add key entityInfo
+
+    [<CompiledName "WithOnePending">]
     let withOnePending key stamp (EntitySet map) =
-        match map |> Map.tryFind key with
-        | Some entityInfo -> entityInfo |> EntityInfo.withPending stamp
-        | None -> EntityInfo.ofPending stamp
-        |> fun entityInfo -> map |> Map.add key entityInfo
+        map
+        |> mapWithOnePending key stamp
         |> EntitySet
 
-    [<CompiledName("WithManyPending")>]
-    let withManyPending stamp entitySet = entitySet |> withManyFunc withOnePending stamp
+    [<CompiledName "WithManyPending">]
+    let withManyPending stamp entitySet =
+        (stamp, entitySet) ||> withManyFunc mapWithOnePending
 
 
-    [<CompiledName("WithOneCompleted")>]
+    let private mapWithOneCompleted key stamp map =
+        map
+        |> Map.tryFind key
+        |> EntityInfo.optionWithCompleted stamp
+        |> fun entityInfo -> map |> Map.add key entityInfo
+
+    [<CompiledName "WithOneCompleted">]
     let withOneCompleted key stamp (EntitySet map) =
-        match map |> Map.tryFind key with
-        | Some entityInfo -> entityInfo |> EntityInfo.withCompleted stamp
-        | None -> EntityInfo.ofCompleted stamp
-        |> fun entityInfo -> map |> Map.add key entityInfo
+        map
+        |> mapWithOneCompleted key stamp
         |> EntitySet
 
-    [<CompiledName("WithManyCompleted")>]
-    let withManyCompleted stamp entitySet = entitySet |> withManyFunc withOneCompleted stamp
+    [<CompiledName "WithManyCompleted">]
+    let withManyCompleted stamp entitySet =
+        (stamp, entitySet) ||> withManyFunc mapWithOneCompleted
 
 
-    [<CompiledName("WithOneFailed")>]
+    let private mapWithOneFailed key stamp map =
+        map
+        |> Map.tryFind key
+        |> EntityInfo.optionWithFailed stamp
+        |> fun entityInfo -> map |> Map.add key entityInfo
+
+    [<CompiledName "WithOneFailed">]
     let withOneFailed key stamp (EntitySet map) =
-        match map |> Map.tryFind key with
-        | Some entityInfo -> entityInfo |> EntityInfo.withFailed stamp
-        | None -> EntityInfo.ofFailed stamp
-        |> fun entityInfo -> map |> Map.add key entityInfo
+        map
+        |> mapWithOneFailed key stamp
         |> EntitySet
 
-    [<CompiledName("WithManyFailed")>]
-    let withManyFailed stamp entitySet = entitySet |> withManyFunc withOneFailed stamp
+    [<CompiledName "WithManyFailed">]
+    let withManyFailed stamp entitySet =
+        (stamp, entitySet) ||> withManyFunc mapWithOneFailed
 
 
-    [<CompiledName("WithOneSuccessful")>]
+    let private mapWithOneSuccessful key stamp map =
+        map
+        |> Map.tryFind key
+        |> EntityInfo.optionWithSuccessful stamp
+        |> fun entityInfo -> map |> Map.add key entityInfo
+
+    [<CompiledName "WithOneSuccessful">]
     let withOneSuccessful key stamp (EntitySet map) =
-        match map |> Map.tryFind key with
-        | Some entityInfo -> entityInfo |> EntityInfo.withSuccessful stamp
-        | None -> EntityInfo.ofSuccessful stamp
-        |> fun entityInfo -> map |> Map.add key entityInfo
+        map
+        |> mapWithOneSuccessful key stamp
         |> EntitySet
 
-    [<CompiledName("WithManySuccessful")>]
-    let withManySuccessful stamp entitySet = entitySet |> withManyFunc withOneSuccessful stamp
+    [<CompiledName "WithManySuccessful">]
+    let withManySuccessful stamp entitySet =
+        (stamp, entitySet) ||> withManyFunc mapWithOneSuccessful
 
 
-    [<CompiledName("WithOneAbsent")>]
-    let withOneAbsent key stamp entitySet =
-        entitySet |> withOneSuccessful key (stamp |> Stamp.mapTo None)
+    let private mapWithOneAbsent key stamp map =
+        map |> mapWithOneSuccessful key (stamp |> Stamp.mapTo None)
 
-    [<CompiledName("WithManyAbsent")>]
-    let withManyAbsent stamp entitySet = entitySet |> withManyFunc withOneAbsent stamp
+    [<CompiledName "WithOneAbsent">]
+    let withOneAbsent key stamp (EntitySet map) =
+        map
+        |> mapWithOneAbsent key stamp
+        |> EntitySet
+
+    [<CompiledName "WithManyAbsent">]
+    let withManyAbsent stamp entitySet =
+        (stamp, entitySet) ||> withManyFunc mapWithOneAbsent
 
 
-    [<CompiledName("WithOnePresent")>]
-    let withOnePresent key stamp entitySet =
-        entitySet |> withOneSuccessful key (stamp |> Stamp.map Some)
+    let private mapWithOnePresent key stamp map =
+        map |> mapWithOneSuccessful key (stamp |> Stamp.map Some)
 
-    [<CompiledName("WithManyPresent")>]
-    let withManyPresent stamp entitySet = entitySet |> withManyFunc withOnePresent stamp
+    [<CompiledName "WithOnePresent">]
+    let withOnePresent key stamp (EntitySet map) =
+        map
+        |> mapWithOnePresent key stamp
+        |> EntitySet
+
+    [<CompiledName "WithManyPresent">]
+    let withManyPresent stamp entitySet =
+        (stamp, entitySet) ||> withManyFunc mapWithOnePresent

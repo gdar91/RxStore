@@ -1,0 +1,62 @@
+﻿@namespace RxStore
+
+@using Microsoft.FSharp.Core
+@using RxStore.Entity
+
+
+@typeparam T
+
+
+<ForOption Of="Of">
+    <WhenSome Context="entityInfo">
+        <ForCompletion Of="entityInfo.Stamp.Item">
+            <WhenPending>
+                @if (WhenPending != null)
+                {
+                    @WhenPending(Stamp.MapTo(default(Unit), entityInfo.Stamp))
+                }
+            </WhenPending>
+            <WhenCompleted Context="result">
+                <ForResult Of="result">
+                    <WhenOk Context="value">
+                        @if (WhenSuccessful != null)
+                        {
+                            @WhenSuccessful(Stamp.MapTo(value, entityInfo.Stamp))
+                        }
+                    </WhenOk>
+                    <WhenError Context="message">
+                        @if (WhenFailed != null)
+                        {
+                            @WhenFailed(Stamp.MapTo(message, entityInfo.Stamp))
+                        }
+                    </WhenError>
+                </ForResult>
+            </WhenCompleted>
+        </ForCompletion>
+    </WhenSome>
+    <WhenNone>
+        @if (WhenNotAvailable != null)
+        {
+            @WhenNotAvailable
+        }
+    </WhenNone>
+</ForOption>
+
+
+@code
+{
+    [Parameter]
+    public FSharpOption<EntityInfo<T>> Of { get; set; }
+
+    [Parameter]
+    public RenderFragment WhenNotAvailable { get; set; }
+
+    [Parameter]
+    public RenderFragment<Stamp<Unit>> WhenPending { get; set; }
+
+    [Parameter]
+    public RenderFragment<Stamp<string>> WhenFailed { get; set; }
+
+    [Parameter]
+    public RenderFragment<Stamp<T>> WhenSuccessful { get; set; }
+}
