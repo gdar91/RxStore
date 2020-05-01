@@ -1,0 +1,39 @@
+﻿@namespace RxStoreC
+
+@using Microsoft.FSharp.Core
+@using RxStore
+
+
+@typeparam TOk
+@typeparam TError
+
+
+<Subscribe To="Of" Context="result">
+    <RxStoreC.ForResult Of="result">
+        <WhenOk Context="value">
+            @if (WhenOk != null)
+            {
+                @WhenOk(value)
+            }
+        </WhenOk>
+        <WhenError Context="value">
+            @if (WhenError != null)
+            {
+                @WhenError(value)
+            }
+        </WhenError>
+    </RxStoreC.ForResult>
+</Subscribe>
+
+
+@code
+{
+    [Parameter]
+    public IObservable<FSharpResult<TOk, TError>> Of { get; set; }
+
+    [Parameter]
+    public RenderFragment<TOk> WhenOk { get; set; }
+
+    [Parameter]
+    public RenderFragment<TError> WhenError { get; set; }
+}

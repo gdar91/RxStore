@@ -1,46 +1,43 @@
-﻿@namespace RxStore
+﻿@namespace RxStoreC
 
 @using Microsoft.FSharp.Core
+@using RxStore
 @using RxStore.Entity
 
 
 @typeparam T
 
 
-<ForOption Of="Of">
+<RxStoreC.ForOption Of="Of">
     <WhenSome Context="entityInfo">
-        <ForCompletion Of="entityInfo.Stamp.Item">
-            <WhenPending>
+        <RxStoreC.ForEntityInfo Of="entityInfo">
+            <WhenPending Context="stamp">
                 @if (WhenPending != null)
                 {
-                    @WhenPending(Stamp.MapTo(default(Unit), entityInfo.Stamp))
+                    @WhenPending(stamp)
                 }
             </WhenPending>
-            <WhenCompleted Context="result">
-                <ForResult Of="result">
-                    <WhenOk Context="value">
-                        @if (WhenSuccessful != null)
-                        {
-                            @WhenSuccessful(Stamp.MapTo(value, entityInfo.Stamp))
-                        }
-                    </WhenOk>
-                    <WhenError Context="message">
-                        @if (WhenFailed != null)
-                        {
-                            @WhenFailed(Stamp.MapTo(message, entityInfo.Stamp))
-                        }
-                    </WhenError>
-                </ForResult>
-            </WhenCompleted>
-        </ForCompletion>
+            <WhenFailed Context="stamp">
+                @if (WhenFailed != null)
+                {
+                    @WhenFailed(stamp)
+                }
+            </WhenFailed>
+            <WhenSuccessful Context="stamp">
+                @if (WhenSuccessful != null)
+                {
+                    @WhenSuccessful(stamp)
+                }
+            </WhenSuccessful>
+        </RxStoreC.ForEntityInfo>
     </WhenSome>
     <WhenNone>
-        @if (WhenNotAvailable != null)
+        @if (WhenNone != null)
         {
-            @WhenNotAvailable
+            @WhenNone
         }
     </WhenNone>
-</ForOption>
+</RxStoreC.ForOption>
 
 
 @code
@@ -49,7 +46,7 @@
     public FSharpOption<EntityInfo<T>> Of { get; set; }
 
     [Parameter]
-    public RenderFragment WhenNotAvailable { get; set; }
+    public RenderFragment WhenNone { get; set; }
 
     [Parameter]
     public RenderFragment<Stamp<Unit>> WhenPending { get; set; }

@@ -1,0 +1,48 @@
+﻿@namespace RxStoreC
+
+@using Microsoft.FSharp.Core
+@using RxStore
+@using RxStore.Entity
+
+
+@typeparam T
+
+
+<Subscribe To="Of" Context="entityInfo">
+    <RxStoreC.ForEntityInfo Of="entityInfo">
+        <WhenPending Context="stamp">
+            @if (WhenPending != null)
+            {
+                @WhenPending(stamp)
+            }
+        </WhenPending>
+        <WhenFailed Context="stamp">
+            @if (WhenFailed != null)
+            {
+                @WhenFailed(stamp)
+            }
+        </WhenFailed>
+        <WhenSuccessful Context="stamp">
+            @if (WhenSuccessful != null)
+            {
+                @WhenSuccessful(stamp)
+            }
+        </WhenSuccessful>
+    </RxStoreC.ForEntityInfo>
+</Subscribe>
+
+
+@code
+{
+    [Parameter]
+    public IObservable<EntityInfo<T>> Of { get; set; }
+
+    [Parameter]
+    public RenderFragment<Stamp<Unit>> WhenPending { get; set; }
+
+    [Parameter]
+    public RenderFragment<Stamp<string>> WhenFailed { get; set; }
+
+    [Parameter]
+    public RenderFragment<Stamp<T>> WhenSuccessful { get; set; }
+}

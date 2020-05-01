@@ -1,0 +1,38 @@
+﻿@namespace RxStoreC
+
+@using RxStore
+@using RxStore.Entity
+
+
+@typeparam T
+
+
+<Subscribe To="Of" Context="completion">
+    <RxStoreC.ForCompletion Of="completion">
+        <WhenPending>
+            @if (WhenPending != null)
+            {
+                @WhenPending
+            }
+        </WhenPending>
+        <WhenCompleted Context="value">
+            @if (WhenCompleted != null)
+            {
+                @WhenCompleted(value)
+            }
+        </WhenCompleted>
+    </RxStoreC.ForCompletion>
+</Subscribe>
+
+
+@code
+{
+    [Parameter]
+    public IObservable<Completion<T>> Of { get; set; }
+
+    [Parameter]
+    public RenderFragment WhenPending { get; set; }
+
+    [Parameter]
+    public RenderFragment<T> WhenCompleted { get; set; }
+}

@@ -1,0 +1,38 @@
+﻿@namespace RxStoreC
+
+@using Microsoft.FSharp.Core
+@using RxStore
+
+
+@typeparam T
+
+
+<Subscribe To="Of" Context="option">
+    <RxStoreC.ForOption Of="option">
+        <WhenSome Context="value">
+            @if (WhenSome != null)
+            {
+                @WhenSome(value)
+            }
+        </WhenSome>
+        <WhenNone>
+            @if (WhenNone != null)
+            {
+                @WhenNone
+            }
+        </WhenNone>
+    </RxStoreC.ForOption>
+</Subscribe>
+
+
+@code
+{
+    [Parameter]
+    public IObservable<FSharpOption<T>> Of { get; set; }
+
+    [Parameter]
+    public RenderFragment<T> WhenSome { get; set; }
+
+    [Parameter]
+    public RenderFragment WhenNone { get; set; }
+}
