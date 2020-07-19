@@ -8,13 +8,13 @@ namespace RxStore
 {
     public abstract class ReactiveComponentBase : ComponentBase, IDisposable
     {
-        private Subject<Unit> initializesSubject = new Subject<Unit>();
+        private ISubject<Unit> initializesSubject = Subject.Synchronize(new Subject<Unit>());
 
-        private Subject<Unit> parametersSetsSubject = new Subject<Unit>();
+        private ISubject<Unit> parametersSetsSubject = Subject.Synchronize(new Subject<Unit>());
 
-        private Subject<bool> afterRendersSubject = new Subject<bool>();
+        private ISubject<bool> afterRendersSubject = Subject.Synchronize(new Subject<bool>());
 
-        private Subject<Unit> disposesSubject = new Subject<Unit>();
+        private ISubject<Unit> disposesSubject = Subject.Synchronize(new Subject<Unit>());
 
 
 

@@ -1,5 +1,6 @@
 ﻿@namespace RxStore
 
+@using System.Reactive
 @using System.Reactive.Linq
 @using System.Reactive.Subjects
 
@@ -19,7 +20,8 @@
 
 @code
 {
-    private readonly ISubject<IObservable<TElement>> sources = new Subject<IObservable<TElement>>();
+    private readonly ISubject<IObservable<TElement>> sources =
+        Subject.Synchronize(new Subject<IObservable<TElement>>());
 
     private IDisposable sourcesConnection;
 
@@ -43,7 +45,8 @@
             {
                 sourcesConnection = sources
                     .Switch()
-                    .Do(UpdateElement)
+                    .Select(UpdateElement)
+                    .Concat()
                     .Publish()
                     .Connect();
             }
@@ -56,14 +59,16 @@
         sources.OnNext(source);
     }
 
-    private void UpdateElement(TElement newElement)
+    private IObservable<Unit> UpdateElement(TElement newElement)
     {
-        InvokeAsync(() =>
-        {
-            element = newElement;
-            available = true;
-            StateHasChanged();
-        });
+        return Observable.FromAsync(cancellationToken =>
+            InvokeAsync(() =>
+            {
+                element = newElement;
+                available = true;
+                StateHasChanged();
+            })
+        );
     }
 
     public void Dispose()

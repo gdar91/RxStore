@@ -23,7 +23,7 @@ namespace RxStore
     }
 
 
-    public abstract class Store<TState, TAction> : Store, IObservable<TState>
+    public abstract class Store<TState, TAction> : Store, IObservable<TState>, IDisposable
     {
         private readonly IObservable<StateTransition> stateTransitions;
 
@@ -33,13 +33,16 @@ namespace RxStore
 
         private readonly IObservable<StateTransition> outStateTransitions;
 
-        private readonly Subject<Unit> interactions = new Subject<Unit>();
+        private readonly ISubject<Unit> interactions = Subject.Synchronize(new Subject<Unit>());
+
+        private readonly ISubject<Unit> disposes = Subject.Synchronize(new Subject<Unit>());
 
 
         internal Store(IObservable<StateTransition> stateTransitions, Func<TAction, Unit> dispatch)
             : base(typeof(TState), typeof(TAction))
         {
             this.stateTransitions = stateTransitions
+                .TakeUntil(disposes)
                 .Publish()
                 .AutoConnect(3);
 
@@ -70,9 +73,11 @@ namespace RxStore
                         .ToObservable()
                         .Merge()
                         .Do(action => Task.Run(() => dispatch(action)))
+                        .TakeUntil(disposes)
                         .Publish()
                         .AutoConnect(0);
                 })
+                .TakeUntil(disposes)
                 .Publish()
                 .AutoConnect(0);
 
@@ -96,7 +101,7 @@ namespace RxStore
             out Func<TAction, Unit> dispatch
         )
         {
-            var actionsSubject = new Subject<TAction>();
+            var actionsSubject = Subject.Synchronize(new Subject<TAction>());
 
             var initialStateTransition = StateTransition.NewInitial(initialState);
 
@@ -151,8 +156,10 @@ namespace RxStore
             return states.Subscribe(observer);
         }
 
-
-
+        public void Dispose()
+        {
+            disposes.OnNext(Unit.Default);
+        }
 
         internal abstract class StateTransition
         {
