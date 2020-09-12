@@ -1,18 +1,18 @@
 ﻿namespace RxStore.Entity
 
 
-type CompletedEntityInfo<'Value> =
-    { Stamp: 'Value Result Stamp;
-      LatestSuccessfulOption: 'Value Stamp option }
+type CompletedEntityInfo<'T, 'TError> =
+    { Stamp: Result<'T, 'TError> Stamp;
+      LatestSuccessfulOption: 'T Stamp option }
 
-and EntityInfo<'Value> =
-    { Stamp: 'Value Result Completion Stamp;
-      LatestCompletedOption: 'Value CompletedEntityInfo option }
+and EntityInfo<'T, 'TError> =
+    { Stamp: Result<'T, 'TError> Completion Stamp;
+      LatestCompletedOption: CompletedEntityInfo<'T, 'TError> option }
 
 
-and Result<'Item> = Result<'Item, ErrorValue>
+and EntityInfo<'T> = EntityInfo<'T, EntityError>
 
-and ErrorValue = string
+and EntityError = string
 
 
 module EntityInfo =
@@ -50,7 +50,7 @@ module EntityInfo =
 
 
     [<CompiledName "PendingOptionOfValue">]
-    let pendingOptionOfValue<'a> (stamp: 'a Result Completion Stamp) =
+    let pendingOptionOfValue<'T, 'TError> (stamp: Result<'T, 'TError> Completion Stamp) =
         match stamp.Item with
         | Pending -> Some (stamp |> Stamp.mapTo ())
         | Completed _ -> None
@@ -64,7 +64,7 @@ module EntityInfo =
 
 
     [<CompiledName "CompletedOptionOfValue">]
-    let completedOptionOfValue<'a> (stamp: 'a Result Completion Stamp) =
+    let completedOptionOfValue<'T, 'TError> (stamp: Result<'T, 'TError> Completion Stamp) =
         match stamp.Item with
         | Pending -> None
         | Completed result -> Some (stamp |> Stamp.mapTo result)
@@ -78,7 +78,7 @@ module EntityInfo =
 
 
     [<CompiledName "FailedOptionOfCompletedValue">]
-    let failedOptionOfCompletedValue<'a> (stamp: 'a Result Stamp) =
+    let failedOptionOfCompletedValue<'T, 'TError> (stamp: Result<'T, 'TError> Stamp) =
         match stamp.Item with
         | Ok _ -> None
         | Error value -> Some (stamp |> Stamp.mapTo value)
@@ -93,7 +93,7 @@ module EntityInfo =
 
 
     [<CompiledName "SuccessfulOptionOfCompletedValue">]
-    let successfulOptionOfCompletedValue<'a> (stamp: 'a Result Stamp) =
+    let successfulOptionOfCompletedValue<'T, 'TError> (stamp: Result<'T, 'TError> Stamp) =
         match stamp.Item with
         | Ok value -> Some (stamp |> Stamp.mapTo value)
         | Error _ -> None
@@ -267,13 +267,13 @@ module EntityInfo =
 
 
     [<CompiledName "OfCompleted">]
-    let ofCompleted<'a> (stamp: 'a Result Stamp) =
+    let ofCompleted<'T, 'TError> (stamp: Result<'T, 'TError> Stamp) =
         match stamp.Item with
         | Ok item -> ofSuccessful (stamp |> Stamp.mapTo item)
         | Error item -> ofFailed (stamp |> Stamp.mapTo item)
 
     [<CompiledName "WithCompleted">]
-    let withCompleted<'a> (stamp: 'a Result Stamp) entityInfo =
+    let withCompleted<'T, 'TError> (stamp: Result<'T, 'TError> Stamp) entityInfo =
         (stamp, entityInfo)
         ||> withNext
             (fun () ->

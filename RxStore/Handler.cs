@@ -5,14 +5,19 @@ using System.Reactive.Subjects;
 
 namespace RxStore
 {
-    public abstract class Handler<TCommand, TEvent> : ISubject<TCommand, TEvent>
+    public interface IHandler<TCommand, TEvent> : ISubject<TCommand, TEvent>
+    { }
+
+
+    public abstract class Handler<TCommand, TEvent> : IHandler<TCommand, TEvent>
     {
         public Handler()
         {
-            Events = Observable
-                .Defer(() => Setup(Commands).ToObservable())
-                .Where(observable => observable != null)
-                .Merge();
+            Events =
+                Observable
+                    .Defer(() => Setup(Commands.AsObservable()).ToObservable())
+                    .Where(observable => observable != null)
+                    .Merge();
         }
 
 
@@ -22,7 +27,7 @@ namespace RxStore
         private IObservable<TEvent> Events { get; }
 
 
-        protected abstract IEnumerable<IObservable<TEvent>> Setup(ISubject<TCommand> commands);
+        protected abstract IEnumerable<IObservable<TEvent>> Setup(IObservable<TCommand> commands);
 
 
         public void OnNext(TCommand value) => Commands.OnNext(value);

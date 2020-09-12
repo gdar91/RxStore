@@ -6,6 +6,7 @@
 
 
 @typeparam T
+@typeparam TError
 
 
 <RxStoreC.ForCompletion Of="Of.Stamp.Item">
@@ -37,13 +38,13 @@
 @code
 {
     [Parameter]
-    public EntityInfo<T> Of { get; set; }
+    public EntityInfo<T, TError> Of { get; set; }
 
     [Parameter]
     public RenderFragment<Stamp<Unit>> WhenPending { get; set; }
 
     [Parameter]
-    public RenderFragment<Stamp<string>> WhenFailed { get; set; }
+    public RenderFragment<Stamp<TError>> WhenFailed { get; set; }
 
     [Parameter]
     public RenderFragment<Stamp<T>> WhenSuccessful { get; set; }

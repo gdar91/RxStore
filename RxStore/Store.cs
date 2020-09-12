@@ -4,7 +4,10 @@ using System.Reactive.Subjects;
 
 namespace RxStore
 {
-    public sealed partial class Store<TEvent, TState> : ISubject<TEvent, TState>, IDisposable
+    public sealed partial class Store<TEvent, TState> :
+        ISubject<TEvent, TState>,
+        IDispatcher<TEvent>,
+        IProjection<TState>
     {
         public Store(TState initialState, Func<TState, TEvent, TState> reducer)
         {

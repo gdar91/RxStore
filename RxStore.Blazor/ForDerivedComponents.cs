@@ -18,15 +18,15 @@
     public partial class ForResultObservable<TOk, TError> : RxStoreC.ForResultObservable<TOk, TError>
     { }
 
-    public partial class ForEntityInfo<T> : RxStoreC.ForEntityInfo<T>
+    public partial class ForEntityInfo<T, TError> : RxStoreC.ForEntityInfo<T, TError>
     { }
 
-    public partial class ForEntityInfoObservable<T> : RxStoreC.ForEntityInfoObservable<T>
+    public partial class ForEntityInfoObservable<T, TError> : RxStoreC.ForEntityInfoObservable<T, TError>
     { }
 
-    public partial class ForEntityInfoOption<T> : RxStoreC.ForEntityInfoOption<T>
+    public partial class ForEntityInfoOption<T, TError> : RxStoreC.ForEntityInfoOption<T, TError>
     { }
 
-    public partial class ForEntityInfoOptionObservable<T> : RxStoreC.ForEntityInfoOptionObservable<T>
+    public partial class ForEntityInfoOptionObservable<T, TError> : RxStoreC.ForEntityInfoOptionObservable<T, TError>
     { }
 }

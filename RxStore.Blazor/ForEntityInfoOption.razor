@@ -6,6 +6,7 @@
 
 
 @typeparam T
+@typeparam TError
 
 
 <RxStoreC.ForOption Of="Of">
@@ -43,7 +44,7 @@
 @code
 {
     [Parameter]
-    public FSharpOption<EntityInfo<T>> Of { get; set; }
+    public FSharpOption<EntityInfo<T, TError>> Of { get; set; }
 
     [Parameter]
     public RenderFragment WhenNone { get; set; }
@@ -52,7 +53,7 @@
     public RenderFragment<Stamp<Unit>> WhenPending { get; set; }
 
     [Parameter]
-    public RenderFragment<Stamp<string>> WhenFailed { get; set; }
+    public RenderFragment<Stamp<TError>> WhenFailed { get; set; }
 
     [Parameter]
     public RenderFragment<Stamp<T>> WhenSuccessful { get; set; }

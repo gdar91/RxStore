@@ -1,7 +1,9 @@
 using System;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
+using RxStore.Entity;
 
 namespace RxStore
 {
@@ -34,5 +36,8 @@ namespace RxStore
                 return () => hubConnection.DisposeAsync();
             });
         }
+
+        public static Stamp<T> AsStamp<T>(this Timestamped<T> timestamped) =>
+            Stamp.OfValues(timestamped.Timestamp, timestamped.Value);
     }
 }

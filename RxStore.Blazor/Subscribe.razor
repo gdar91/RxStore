@@ -4,76 +4,115 @@
 @using System.Reactive.Linq
 @using System.Reactive.Subjects
 
-@typeparam TElement
+@inherits ReactiveComponentBase
 
-@implements IDisposable
+@typeparam T
 
 
-@if (available)
+@if (valueAvailable)
 {
-    if (ChildContent != null)
+    if (childContent != null)
     {
-        @ChildContent(element)
+        @childContent(value)
     }
 }
 
 
 @code
 {
-    private readonly ISubject<IObservable<TElement>> sources =
-        Subject.Synchronize(new Subject<IObservable<TElement>>());
+    private readonly ISubject<IObservable<T>> sourcesSubject =
+        Subject.Synchronize(new Subject<IObservable<T>>());
 
-    private IDisposable sourcesConnection;
-
-    private TElement element;
-
-    private bool available = false;
+    private readonly ISubject<RenderFragment<T>> childContentsSubject =
+        Subject.Synchronize(new Subject<RenderFragment<T>>());
 
 
-    [Parameter]
-    public IObservable<TElement> To { set => UpdateSource(value); }
+    private readonly object gate = new object();
 
-    [Parameter]
-    public RenderFragment<TElement> ChildContent { get; set; } // TODO if null
+    private bool shouldRender = false;
 
 
-    private void UpdateSource(IObservable<TElement> rawSource)
+    private bool valueAvailable = false;
+
+    private T value;
+
+
+    private RenderFragment<T> childContent;
+
+
+    public Subscribe()
     {
-        lock (sources)
+        sourcesSubject
+            .CombineLatest(Initializes, (source, initialize) => source)
+            .DistinctUntilChanged()
+            .Select(source =>
+                source?.Catch<T, Exception>(e => Observable.Empty<T>())
+                    ?? Observable.Empty<T>()
+            )
+            .Switch()
+            .DistinctUntilChanged()
+            .Select(value =>
+                Observable.FromAsync(cancellationToken =>
+                    InvokeAsync(() =>
+                    {
+                        lock (gate)
+                        {
+                            this.value = value;
+                            valueAvailable = true;
+                            shouldRender = true;
+                            StateHasChanged();
+                        }
+                    })
+                )
+            )
+            .Concat()
+            .TakeUntil(Disposes)
+            .Publish()
+            .AutoConnect(0);
+
+
+        childContentsSubject
+            .CombineLatest(Initializes, (childContent, initialize) => childContent)
+            .DistinctUntilChanged()
+            .Select(childContent =>
+                Observable.FromAsync(cancellationToken =>
+                    InvokeAsync(() =>
+                    {
+                        lock (gate)
+                        {
+                            this.childContent = childContent;
+                            shouldRender = true;
+                            StateHasChanged();
+                        }
+                    })
+                )
+            )
+            .Concat()
+            .TakeUntil(Disposes)
+            .Publish()
+            .AutoConnect(0);
+    }
+
+
+    [Parameter]
+    public IObservable<T> To { set => sourcesSubject.OnNext(value); }
+
+    [Parameter]
+    public RenderFragment<T> ChildContent { set => childContentsSubject.OnNext(value); }
+
+
+    protected override bool ShouldRender()
+    {
+        lock (gate)
         {
-            if (sourcesConnection == null)
+            if (shouldRender)
             {
-                sourcesConnection = sources
-                    .Switch()
-                    .Select(UpdateElement)
-                    .Concat()
-                    .Publish()
-                    .Connect();
+                shouldRender = false;
+
+                return true;
             }
+
+            return false;
         }
-
-        var source = rawSource == null
-            ? Observable.Never<TElement>()
-            : rawSource.Catch<TElement, Exception>(e => Observable.Empty<TElement>());
-
-        sources.OnNext(source);
-    }
-
-    private IObservable<Unit> UpdateElement(TElement newElement)
-    {
-        return Observable.FromAsync(cancellationToken =>
-            InvokeAsync(() =>
-            {
-                element = newElement;
-                available = true;
-                StateHasChanged();
-            })
-        );
-    }
-
-    public void Dispose()
-    {
-        using (var resource = sourcesConnection)
-        { }
     }
 }

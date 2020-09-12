@@ -1,19 +1,21 @@
 namespace RxStore.Entity
 
 
-type EntitySet<'Value> = EntitySet<Key, 'Value>
+type EntitySet<'TEntity> = EntitySet<Key, 'TEntity, EntityError>
 
-and EntitySet<'Key, 'Value> when 'Key : comparison =
-    EntitySet of Map<'Key, 'Value EntityInfo>
+and EntitySet<'TKey, 'TEntity, 'TEntityError> when 'TKey : comparison =
+    EntitySet of Map<'TKey, EntityInfo<'TEntity, 'TEntityError>>
 
 
 and Key = System.Guid
 
 
+
+
 module EntitySet =
 
     [<CompiledName "Empty">]
-    let empty<'Key, 'Value when 'Key : comparison> : EntitySet<'Key, 'Value> =
+    let empty<'TKey, 'TValue, 'TError when 'TKey : comparison> : EntitySet<'TKey, 'TValue, 'TError> =
         EntitySet (Map.empty)
 
 
