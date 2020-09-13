@@ -62,6 +62,10 @@ namespace RxStore
                             {
                                 observer.OnError(e);
                             }
+                            else
+                            {
+                                observer.OnCompleted();
+                            }
 
                             return Task.CompletedTask;
                         };
