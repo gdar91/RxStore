@@ -42,7 +42,7 @@ namespace RxStore
 
 
         public static IObservable<FSharpOption<HubConnection>> Observe(
-            this HubConnectionBuilder hubConnectionBuilder
+            this IHubConnectionBuilder hubConnectionBuilder
         )
         {
             return Observable.Create<FSharpOption<HubConnection>>(
