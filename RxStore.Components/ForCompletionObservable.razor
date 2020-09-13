@@ -1,14 +1,13 @@
 ﻿@namespace RxStoreC
 
-@using RxStore
-@using RxStore.Entity
+@using RxStore.Entity 
 
 
 @typeparam T
 
 
-<Subscribe To="Of" Context="completion">
-    <RxStoreC.ForCompletion Of="completion">
+<RxStore.Subscribe To="Of" Context="completion">
+    <ForCompletion Of="completion">
         <WhenPending>
             @if (WhenPending != null)
             {
@@ -21,8 +20,8 @@
                 @WhenCompleted(value)
             }
         </WhenCompleted>
-    </RxStoreC.ForCompletion>
-</Subscribe>
+    </ForCompletion>
+</RxStore.Subscribe>
 
 
 @code

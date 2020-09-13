@@ -1,7 +1,6 @@
 ﻿@namespace RxStoreC
 
 @using Microsoft.FSharp.Core
-@using RxStore
 @using RxStore.Entity
 
 
@@ -9,7 +8,7 @@
 @typeparam TError
 
 
-<RxStoreC.ForCompletion Of="Of.Stamp.Item">
+<ForCompletion Of="Of.Stamp.Item">
     <WhenPending>
         @if (WhenPending != null)
         {
@@ -17,7 +16,7 @@
         }
     </WhenPending>
     <WhenCompleted Context="result">
-        <RxStoreC.ForResult Of="result">
+        <ForResult Of="result">
             <WhenOk Context="value">
                 @if (WhenSuccessful != null)
                 {
@@ -30,9 +29,9 @@
                     @WhenFailed(Stamp.MapTo(message, Of.Stamp))
                 }
             </WhenError>
-        </RxStoreC.ForResult>
+        </ForResult>
     </WhenCompleted>
-</RxStoreC.ForCompletion>
+</ForCompletion>
 
 
 @code

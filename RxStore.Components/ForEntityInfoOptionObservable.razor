@@ -1,7 +1,6 @@
 ﻿@namespace RxStoreC
 
 @using Microsoft.FSharp.Core
-@using RxStore
 @using RxStore.Entity
 
 
@@ -9,8 +8,14 @@
 @typeparam TError
 
 
-<Subscribe To="Of" Context="entityInfo">
-    <RxStoreC.ForEntityInfo Of="entityInfo">
+<RxStore.Subscribe To="Of" Context="entityInfoOption">
+    <ForEntityInfoOption Of="entityInfoOption">
+        <WhenNone>
+            @if (WhenNone != null)
+            {
+                @WhenNone
+            }
+        </WhenNone>
         <WhenPending Context="stamp">
             @if (WhenPending != null)
             {
@@ -29,14 +34,17 @@
                 @WhenSuccessful(stamp)
             }
         </WhenSuccessful>
-    </RxStoreC.ForEntityInfo>
-</Subscribe>
+    </ForEntityInfoOption>
+</RxStore.Subscribe>
 
 
 @code
 {
     [Parameter]
-    public IObservable<EntityInfo<T, TError>> Of { get; set; }
+    public IObservable<FSharpOption<EntityInfo<T, TError>>> Of { get; set; }
+
+    [Parameter]
+    public RenderFragment WhenNone { get; set; }
 
     [Parameter]
     public RenderFragment<Stamp<Unit>> WhenPending { get; set; }

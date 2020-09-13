@@ -1,14 +1,13 @@
 ﻿@namespace RxStoreC
 
 @using Microsoft.FSharp.Core
-@using RxStore
 
 
 @typeparam T
 
 
-<Subscribe To="Of" Context="option">
-    <RxStoreC.ForOption Of="option">
+<RxStore.Subscribe To="Of" Context="option">
+    <ForOption Of="option">
         <WhenSome Context="value">
             @if (WhenSome != null)
             {
@@ -21,8 +20,8 @@
                 @WhenNone
             }
         </WhenNone>
-    </RxStoreC.ForOption>
-</Subscribe>
+    </ForOption>
+</RxStore.Subscribe>
 
 
 @code

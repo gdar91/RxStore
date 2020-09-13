@@ -1,4 +1,9 @@
-﻿namespace RxStore
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.FSharp.Core;
+using RxStore.Entity;
+using System;
+
+namespace RxStore
 {
     public partial class ForOption<T> : RxStoreC.ForOption<T>
     { }
@@ -21,7 +26,7 @@
     public partial class ForEntityInfo<T, TError> : RxStoreC.ForEntityInfo<T, TError>
     { }
 
-    public partial class ForEntityInfoObservable<T, TError> : RxStoreC.ForEntityInfoObservable<T, TError>
+    partial class ForEntityInfoObservable<T, TError> : RxStoreC.ForEntityInfoObservable<T, TError>
     { }
 
     public partial class ForEntityInfoOption<T, TError> : RxStoreC.ForEntityInfoOption<T, TError>

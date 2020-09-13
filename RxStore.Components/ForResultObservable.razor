@@ -1,15 +1,14 @@
 ﻿@namespace RxStoreC
 
 @using Microsoft.FSharp.Core
-@using RxStore
 
 
 @typeparam TOk
 @typeparam TError
 
 
-<Subscribe To="Of" Context="result">
-    <RxStoreC.ForResult Of="result">
+<RxStore.Subscribe To="Of" Context="result">
+    <ForResult Of="result">
         <WhenOk Context="value">
             @if (WhenOk != null)
             {
@@ -22,8 +21,8 @@
                 @WhenError(value)
             }
         </WhenError>
-    </RxStoreC.ForResult>
-</Subscribe>
+    </ForResult>
+</RxStore.Subscribe>
 
 
 @code

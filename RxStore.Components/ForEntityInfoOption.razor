@@ -1,17 +1,16 @@
 ﻿@namespace RxStoreC
 
 @using Microsoft.FSharp.Core
-@using RxStore
-@using RxStore.Entity
+@using RxStore.Entity 
 
 
 @typeparam T
 @typeparam TError
 
 
-<RxStoreC.ForOption Of="Of">
+<ForOption Of="Of">
     <WhenSome Context="entityInfo">
-        <RxStoreC.ForEntityInfo Of="entityInfo">
+        <ForEntityInfo Of="entityInfo">
             <WhenPending Context="stamp">
                 @if (WhenPending != null)
                 {
@@ -30,7 +29,7 @@
                     @WhenSuccessful(stamp)
                 }
             </WhenSuccessful>
-        </RxStoreC.ForEntityInfo>
+        </ForEntityInfo>
     </WhenSome>
     <WhenNone>
         @if (WhenNone != null)
@@ -38,7 +37,7 @@
             @WhenNone
         }
     </WhenNone>
-</RxStoreC.ForOption>
+</ForOption>
 
 
 @code
