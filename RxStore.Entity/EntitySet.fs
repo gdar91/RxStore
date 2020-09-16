@@ -260,6 +260,25 @@ module EntitySet =
 
 
 
+    let withEntityInfo key entityInfo (EntitySet map) =
+        map
+        |> Map.add key entityInfo
+        |> EntitySet
+
+    let withoutEntityInfo key (EntitySet map) =
+        map
+        |> Map.remove key
+        |> EntitySet
+
+    let withEntityInfoOption key entityInfoOption entitySet =
+        match entityInfoOption with
+        | Some entityInfo -> withEntityInfo key entityInfo
+        | None -> withoutEntityInfo key
+        <| entitySet
+
+
+
+
     let private mapWithOne key stamp map =
         map
         |> Map.tryFind key
