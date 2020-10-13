@@ -3,10 +3,10 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <RazorLangVersion>3.0</RazorLangVersion>
-    <Version>0.16.0-pre5</Version>
+    <Version>0.16.0-pre7</Version>
     <Authors>Giorgi Darchiashvili</Authors>
     <Company>MIA LEPL 112</Company>
-    <Description>RxStore for Blazor.</Description>
+    <Description>RxStore for Razor.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/gdar91/RxStore</RepositoryUrl>
   </PropertyGroup>
@@ -20,8 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RxStore.Entity\RxStore.Entity.fsproj" />
-    <ProjectReference Include="..\RxStore\RxStore.csproj" />
+    <ProjectReference Include="..\RxStore.ForRazor\RxStore.ForRazor.csproj" />
   </ItemGroup>
 
 </Project>

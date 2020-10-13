@@ -1,9 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
-using Microsoft.FSharp.Core;
-using RxStore.Entity;
-using System;
-
-namespace RxStore
+﻿namespace RxStore
 {
     public partial class ForOption<T> : RxStoreC.ForOption<T>
     { }

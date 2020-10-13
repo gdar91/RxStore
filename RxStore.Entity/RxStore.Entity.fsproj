@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Version>0.16.0-pre4</Version>
+    <Version>0.16.0-pre7</Version>
     <Authors>Giorgi Darchiashvili</Authors>
     <Company>MIA LEPL 112</Company>
     <Description>Strongly-typed client-side entity management for RxStore.</Description>
@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Versioned.fs" />
     <Compile Include="Stamp.fs" />
     <Compile Include="Completion.fs" />
     <Compile Include="EntityInfo.fs" />
