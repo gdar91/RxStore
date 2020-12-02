@@ -8,10 +8,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.FSharp.Reflection;
-using Microsoft.FSharpLu.Json;
 using Microsoft.JSInterop;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace RxStore
 {
