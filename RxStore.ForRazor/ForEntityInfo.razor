@@ -1,37 +1,29 @@
-﻿@namespace RxStoreC
-
-@using Microsoft.FSharp.Core
-@using RxStore.Entity
-
+﻿@namespace RxStore
 
 @typeparam T
 @typeparam TError
 
 
-<ForCompletion Of="Of.Stamp.Item">
-    <WhenPending>
-        @if (WhenPending != null)
-        {
-            @WhenPending(Stamp.MapTo(default(Unit), Of.Stamp))
-        }
-    </WhenPending>
-    <WhenCompleted Context="result">
-        <ForResult Of="result">
-            <WhenOk Context="value">
-                @if (WhenSuccessful != null)
-                {
-                    @WhenSuccessful(Stamp.MapTo(value, Of.Stamp))
-                }
-            </WhenOk>
-            <WhenError Context="message">
-                @if (WhenFailed != null)
-                {
-                    @WhenFailed(Stamp.MapTo(message, Of.Stamp))
-                }
-            </WhenError>
-        </ForResult>
-    </WhenCompleted>
-</ForCompletion>
+<ForOption Of="Of.LatestResult">
+    <WhenNone></WhenNone>
+    <WhenSome Context="latestResult">
+        <ForOption Of="latestResult.LatestItem">
+            <WhenSome Context="stamp">
+                @WhenItem(stamp)
+            </WhenSome>
+            <WhenNone>
+                <ForResult Of="latestResult.Stamp.Item">
+                    <WhenOk Context="item">
+                        @WhenItem(Stamp.MapTo(item, latestResult.Stamp))
+                    </WhenOk>
+                    <WhenError Context="error">
+                        @WhenError(Stamp.MapTo(error, latestResult.Stamp))
+                    </WhenError>
+                </ForResult>
+            </WhenNone>
+        </ForOption>
+    </WhenSome>
+</ForOption>
 
 
 @code
@@ -40,11 +32,11 @@
     public EntityInfo<T, TError> Of { get; set; }
 
     [Parameter]
-    public RenderFragment<Stamp<Unit>> WhenPending { get; set; }
+    public RenderFragment WhenNothing { get; set; }
 
     [Parameter]
-    public RenderFragment<Stamp<TError>> WhenFailed { get; set; }
+    public RenderFragment<Stamp<TError>> WhenError { get; set; }
 
     [Parameter]
-    public RenderFragment<Stamp<T>> WhenSuccessful { get; set; }
+    public RenderFragment<Stamp<T>> WhenItem { get; set; }
 }

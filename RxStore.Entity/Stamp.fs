@@ -1,4 +1,4 @@
-namespace RxStore.Entity
+namespace RxStore
 
 
 type Stamp<'Item> =

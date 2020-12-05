@@ -1,325 +1,165 @@
-﻿namespace RxStore.Entity
+﻿namespace RxStore
 
 
-type CompletedEntityInfo<'T, 'TError> =
+type EntityInfo<'TItem> = EntityInfo<'TItem, EntityError>
+
+and EntityInfo<'TItem, 'TError> =
+    { Status: EntityInfoStatus;
+      LatestResult: EntityInfoResult<'TItem, 'TError> option; }
+
+
+and EntityInfoStatus = Offline | Online
+
+
+and EntityInfoResult<'T, 'TError> =
     { Stamp: Result<'T, 'TError> Stamp;
-      LatestSuccessfulOption: 'T Stamp option }
+      LatestItem: 'T Stamp option }
 
-and EntityInfo<'T, 'TError> =
-    { Stamp: Result<'T, 'TError> Completion Stamp;
-      LatestCompletedOption: CompletedEntityInfo<'T, 'TError> option }
-
-
-and EntityInfo<'T> = EntityInfo<'T, EntityError>
 
 and EntityError = string
 
 
+
+
 module EntityInfo =
-    
-    [<CompiledName "MapCompletedEntityInfo">]
-    let mapCompletedEntityInfo mapping completedEntityInfo =
-        let forTypeInference = completedEntityInfo.LatestSuccessfulOption
-        { Stamp = completedEntityInfo.Stamp |> Stamp.map (Result.map mapping);
-          LatestSuccessfulOption =
-            completedEntityInfo.LatestSuccessfulOption |> Option.map (Stamp.map mapping) }
 
     [<CompiledName "Map">]
     let map mapping entityInfo =
-        { Stamp = entityInfo.Stamp |> Stamp.map (Completion.map (Result.map mapping));
-          LatestCompletedOption =
-            entityInfo.LatestCompletedOption |> Option.map (mapCompletedEntityInfo mapping) }
-
-    [<CompiledName "MapOption">]
-    let mapOption mapping entityInfoOption =
-        entityInfoOption |> Option.map (map mapping)
-
-
-
-
-    [<CompiledName "LatestSuccessfulOption">]
-    let latestSuccessfulOption entityInfo =
-        entityInfo.LatestCompletedOption
-        |> Option.bind (fun latestCompleted -> latestCompleted.LatestSuccessfulOption)
-
-
-
-
-
-
-
-
-    [<CompiledName "PendingOptionOfValue">]
-    let pendingOptionOfValue<'T, 'TError> (stamp: Result<'T, 'TError> Completion Stamp) =
-        match stamp.Item with
-        | Pending -> Some (stamp |> Stamp.mapTo ())
-        | Completed _ -> None
-
-    [<CompiledName "PendingOption">]
-    let pendingOption entityInfo =
-        entityInfo.Stamp
-        |> pendingOptionOfValue
-
-
-
-
-    [<CompiledName "CompletedOptionOfValue">]
-    let completedOptionOfValue<'T, 'TError> (stamp: Result<'T, 'TError> Completion Stamp) =
-        match stamp.Item with
-        | Pending -> None
-        | Completed result -> Some (stamp |> Stamp.mapTo result)
-
-    [<CompiledName "CompletedOption">]
-    let completedOption entityInfo =
-        entityInfo.Stamp
-        |> completedOptionOfValue
-
-
-
-
-    [<CompiledName "FailedOptionOfCompletedValue">]
-    let failedOptionOfCompletedValue<'T, 'TError> (stamp: Result<'T, 'TError> Stamp) =
-        match stamp.Item with
-        | Ok _ -> None
-        | Error value -> Some (stamp |> Stamp.mapTo value)
-
-    [<CompiledName "FailedOption">]
-    let failedOption entityInfo =
-        entityInfo
-        |> completedOption
-        |> Option.bind failedOptionOfCompletedValue
-
-
-
-
-    [<CompiledName "SuccessfulOptionOfCompletedValue">]
-    let successfulOptionOfCompletedValue<'T, 'TError> (stamp: Result<'T, 'TError> Stamp) =
-        match stamp.Item with
-        | Ok value -> Some (stamp |> Stamp.mapTo value)
-        | Error _ -> None
-
-    [<CompiledName "SuccessfulOption">]
-    let successfulOption entityInfo =
-        entityInfo
-        |> completedOption
-        |> Option.bind successfulOptionOfCompletedValue
-
-
-
-
-    [<CompiledName "AbsentOptionOfSuccessfulValue">]
-    let absentOptionOfSuccessfulValue stamp =
-        match stamp.Item with
-        | Some _ -> None
-        | None -> Some (stamp |> Stamp.mapTo ())
-
-    [<CompiledName "AbsentOption">]
-    let absentOption entityInfo =
-        entityInfo
-        |> successfulOption
-        |> Option.bind absentOptionOfSuccessfulValue
-
-
-
-
-    [<CompiledName "PresentOptionOfSuccessfulValue">]
-    let presentOptionOfSuccessfulValue stamp =
-        match stamp.Item with
-        | Some value -> Some (stamp |> Stamp.mapTo value)
-        | None -> None
-
-    [<CompiledName "PresentOption">]
-    let presentOption entityInfo =
-        entityInfo
-        |> successfulOption
-        |> Option.bind presentOptionOfSuccessfulValue
-
-
-
-
-
-
-
-
-    let private withNext f stamp entityInfo =
-        if entityInfo.Stamp.Time >= stamp.Time
-        then entityInfo
-        else f ()
-
-    let private optionWithNext ofStamp withStamp stamp entityInfoOption =
-        match entityInfoOption with
-        | Some entityInfo -> entityInfo |> withStamp stamp
-        | None -> ofStamp stamp
-
-
-
-
-    [<CompiledName "OfPresent">]
-    let ofPresent stamp =
-        let optionStamp = stamp |> Stamp.map Some
-        { Stamp = optionStamp |> Stamp.map (Completed << Ok);
-          LatestCompletedOption =
-            Some
-                { Stamp = optionStamp |> Stamp.map Ok;
-                  LatestSuccessfulOption = Some optionStamp } }
-
-    [<CompiledName "WithPresent">]
-    let withPresent stamp entityInfo =
-        (stamp, entityInfo)
-        ||> withNext
-            (fun () ->
-                let optionStamp = stamp |> Stamp.map Some
-                { entityInfo with
-                    Stamp = optionStamp |> Stamp.map (Completed << Ok);
-                    LatestCompletedOption =
-                        Some
-                            { Stamp = optionStamp |> Stamp.map Ok;
-                              LatestSuccessfulOption = Some optionStamp } })
-
-    [<CompiledName "OptionWithPresent">]
-    let optionWithPresent stamp entityInfoOption =
-        (stamp, entityInfoOption) ||> optionWithNext ofPresent withPresent
-
-
-
-
-    [<CompiledName "OfAbsent">]
-    let ofAbsent (stamp: unit Stamp) =
-        let optionStamp = stamp |> Stamp.mapTo None
-        { Stamp = optionStamp |> Stamp.map (Completed << Ok);
-          LatestCompletedOption =
-            Some
-                { Stamp = optionStamp |> Stamp.map Ok;
-                  LatestSuccessfulOption = Some optionStamp } }
-
-    [<CompiledName "WithAbsent">]
-    let withAbsent (stamp: unit Stamp) entityInfo =
-        (stamp, entityInfo)
-        ||> withNext
-            (fun () ->
-                let optionStamp = stamp |> Stamp.mapTo None
-                { entityInfo with
-                    Stamp = optionStamp |> Stamp.map (Completed << Ok);
-                    LatestCompletedOption =
-                        Some
-                            { Stamp = optionStamp |> Stamp.map Ok;
-                              LatestSuccessfulOption = Some optionStamp } })
-
-    [<CompiledName "OptionWithAbsent">]
-    let optionWithAbsent stamp entityInfoOption =
-        (stamp, entityInfoOption) ||> optionWithNext ofAbsent withAbsent
-
-
-
-
-    [<CompiledName "OfSuccessful">]
-    let ofSuccessful stamp =
-        { Stamp = stamp |> Stamp.map (Completed << Ok);
-          LatestCompletedOption =
-            Some
-                { Stamp = stamp |> Stamp.map Ok;
-                  LatestSuccessfulOption = Some stamp } }
-
-    [<CompiledName "WithSuccessful">]
-    let withSuccessful stamp entityInfo =
-        (stamp, entityInfo)
-        ||> withNext
-            (fun () ->
-                { entityInfo with
-                    Stamp = stamp |> Stamp.map (Completed << Ok);
-                    LatestCompletedOption =
-                        Some
-                            { Stamp = stamp |> Stamp.map Ok;
-                              LatestSuccessfulOption = Some stamp } })
-
-    [<CompiledName "OptionWithSuccessful">]
-    let optionWithSuccessful stamp entityInfoOption =
-        (stamp, entityInfoOption) ||> optionWithNext ofSuccessful withSuccessful
-
-
-
-
-    [<CompiledName "OfFailed">]
-    let ofFailed stamp =
-        { Stamp = stamp |> Stamp.map (Completed << Error);
-          LatestCompletedOption =
-            Some
+        entityInfo.LatestResult
+        |> Option.map
+            (fun latestResult ->
+                match latestResult.Stamp, latestResult.LatestItem with
+                | { Time = time1; Item = Ok item1 }, Some { Time = time2; Item = item2 }
+                        when time1 = time2 && item1 = item2 ->
+                    let time = time1
+                    let item = (mapping item1)
+                    { Stamp = Stamp.ofValues time (Ok item);
+                      LatestItem = Some (Stamp.ofValues time item) }
+                | _ ->
+                    { Stamp = latestResult.Stamp |> Stamp.map (Result.map mapping);
+                      LatestItem = latestResult.LatestItem |> Option.map (Stamp.map mapping) })
+
+
+    [<CompiledName "MapTo">]
+    let mapTo item entityInfo =
+        entityInfo |> map (fun _ -> item)
+
+
+    // TODO ZipWith
+
+
+    [<CompiledName "LatestItem">]
+    let latestItem entityInfo =
+        entityInfo.LatestResult
+        |> Option.bind (fun latestResult -> latestResult.LatestItem)
+
+
+    [<CompiledName "Item">]
+    let item entityInfo =
+        entityInfo.LatestResult
+        |> Option.bind
+            (fun latestResult ->
+                match latestResult.LatestItem with
+                | Some stamp -> Some stamp
+                | None ->
+                    match latestResult.Stamp.Item with
+                    | Ok item -> Some (latestResult.Stamp |> Stamp.mapTo item)
+                    | Error _ -> None)
+
+
+    [<CompiledName "Empty">]
+    let empty =
+        { Status = Offline;
+          LatestResult = None }
+
+
+    [<CompiledName "WithStatus">]
+    let withStatus stamp entityInfo =
+        { entityInfo with Status = stamp }
+
+
+    [<CompiledName "WithOfflineStatus">]
+    let withOfflineStatus stamp entityInfo =
+        { entityInfo with Status = Offline }
+
+
+    [<CompiledName "WithOnlineStatus">]
+    let withOnlineStatus stamp entityInfo =
+        { entityInfo with Status = Online }
+
+
+    [<CompiledName "WithResult">]
+    let withResult stamp entityInfo =
+        { entityInfo with
+            LatestResult =
+                { Stamp = stamp;
+                  LatestItem =
+                    match stamp.Item with
+                    | Ok item ->
+                        stamp
+                        |> Stamp.mapTo item
+                        |> Some
+                    | Error _ ->
+                        entityInfo.LatestResult
+                        |> Option.bind (fun latestResult -> latestResult.LatestItem) }
+                |> Some }
+
+
+    [<CompiledName "WithCompletingResult">]
+    let withCompletingResult stamp entityInfo =
+        { entityInfo with
+            Status = Offline;
+            LatestResult =
+                { Stamp = stamp;
+                  LatestItem =
+                    match stamp.Item with
+                    | Ok item ->
+                        stamp
+                        |> Stamp.mapTo item
+                        |> Some
+                    | Error _ ->
+                        entityInfo.LatestResult
+                        |> Option.bind (fun latestResult -> latestResult.LatestItem) }
+                |> Some }
+
+
+    [<CompiledName "WithError">]
+    let withError stamp entityInfo =
+        { entityInfo with
+            LatestResult =
                 { Stamp = stamp |> Stamp.map Error;
-                  LatestSuccessfulOption = None } }
-
-    [<CompiledName "WithFailed">]
-    let withFailed stamp entityInfo =
-        (stamp, entityInfo)
-        ||> withNext
-            (fun () ->
-                { entityInfo with
-                    Stamp = stamp |> Stamp.map (Completed << Error);
-                    LatestCompletedOption =
-                        Some
-                            { Stamp = stamp |> Stamp.map Error;
-                              LatestSuccessfulOption = entityInfo |> latestSuccessfulOption } })
-
-    [<CompiledName "OptionWithFailed">]
-    let optionWithFailed stamp entityInfoOption =
-        (stamp, entityInfoOption) ||> optionWithNext ofFailed withFailed
+                  LatestItem =
+                    entityInfo.LatestResult
+                    |> Option.bind (fun latestResult -> latestResult.LatestItem) }
+                |> Some }
 
 
+    [<CompiledName "WithCompletingError">]
+    let withCompletingError stamp entityInfo =
+        { entityInfo with
+            Status = Offline;
+            LatestResult =
+                { Stamp = stamp |> Stamp.map Error;
+                  LatestItem =
+                    entityInfo.LatestResult
+                    |> Option.bind (fun latestResult -> latestResult.LatestItem) }
+                |> Some }
 
 
-    [<CompiledName "OfCompleted">]
-    let ofCompleted<'T, 'TError> (stamp: Result<'T, 'TError> Stamp) =
-        match stamp.Item with
-        | Ok item -> ofSuccessful (stamp |> Stamp.mapTo item)
-        | Error item -> ofFailed (stamp |> Stamp.mapTo item)
-
-    [<CompiledName "WithCompleted">]
-    let withCompleted<'T, 'TError> (stamp: Result<'T, 'TError> Stamp) entityInfo =
-        (stamp, entityInfo)
-        ||> withNext
-            (fun () ->
-                match stamp.Item with
-                | Ok item -> entityInfo |> withSuccessful (stamp |> Stamp.mapTo item)
-                | Error item -> entityInfo |> withFailed (stamp |> Stamp.mapTo item))
-
-    [<CompiledName "OptionWithCompleted">]
-    let optionWithCompleted stamp entityInfoOption =
-        (stamp, entityInfoOption) ||> optionWithNext ofCompleted withCompleted
+    [<CompiledName "WithOk">]
+    let withOk stamp entityInfo =
+        { entityInfo with
+            LatestResult =
+                { Stamp = stamp |> Stamp.map Ok;
+                  LatestItem = Some stamp }
+                |> Some }
 
 
-
-
-    [<CompiledName "OfPending">]
-    let ofPending stamp =
-        { Stamp = stamp |> Stamp.mapTo Pending;
-          LatestCompletedOption = None }
-
-    [<CompiledName "WithPending">]
-    let withPending (stamp: unit Stamp) entityInfo =
-        (stamp, entityInfo)
-        ||> withNext (fun () -> { entityInfo with Stamp = stamp |> Stamp.mapTo Pending })
-
-    [<CompiledName "OptionWithPending">]
-    let optionWithPending stamp entityInfoOption =
-        (stamp, entityInfoOption) ||> optionWithNext ofPending withPending
-
-
-
-
-    [<CompiledName "OfValue">]
-    let ofValue stamp =
-        match stamp.Item with
-        | Pending -> ofPending (stamp |> Stamp.mapTo ())
-        | Completed item -> ofCompleted (stamp |> Stamp.mapTo item)
-
-    [<CompiledName "WithValue">]
-    let withValue stamp entityInfo =
-        (stamp, entityInfo)
-        ||> withNext
-            (fun () ->
-                match stamp.Item with
-                | Pending -> entityInfo |> withPending (stamp |> Stamp.mapTo ())
-                | Completed item -> entityInfo |> withCompleted (stamp |> Stamp.mapTo item))
-
-    [<CompiledName "OptionWithValue">]
-    let optionWithValue stamp entityInfoOption =
-        (stamp, entityInfoOption) ||> optionWithNext ofValue withValue
+    [<CompiledName "WithCompletingOk">]
+    let withCompletingOk stamp entityInfo =
+        { entityInfo with
+            Status = Offline;
+            LatestResult =
+                { Stamp = stamp |> Stamp.map Ok;
+                  LatestItem = Some stamp }
+                |> Some }

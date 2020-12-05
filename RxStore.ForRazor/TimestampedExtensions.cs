@@ -1,5 +1,4 @@
-﻿using RxStore.Entity;
-using System.Reactive;
+﻿using System.Reactive;
 
 namespace RxStore
 {
