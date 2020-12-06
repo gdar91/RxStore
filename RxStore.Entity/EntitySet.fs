@@ -92,21 +92,21 @@ module EntitySet =
 
 
     [<CompiledName "WithOneStatus">]
-    let withOneStatus key stamp entitySet =
+    let withOneStatus key status entitySet =
         entitySet
-        |> mapOne key (EntityInfo.withStatus stamp)
+        |> mapOne key (EntityInfo.withStatus status)
 
 
     [<CompiledName "WithOneOfflineStatus">]
-    let withOneOfflineStatus key stamp entitySet =
+    let withOneOfflineStatus key entitySet =
         entitySet
-        |> mapOne key (EntityInfo.withOfflineStatus stamp)
+        |> mapOne key EntityInfo.withOfflineStatus
 
 
     [<CompiledName "WithOneOnlineStatus">]
-    let withOneOnlineStatus key stamp entitySet =
+    let withOneOnlineStatus key entitySet =
         entitySet
-        |> mapOne key (EntityInfo.withOnlineStatus stamp)
+        |> mapOne key EntityInfo.withOnlineStatus
 
 
     [<CompiledName "WithOneResult">]

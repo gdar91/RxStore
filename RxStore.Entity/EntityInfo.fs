@@ -25,19 +25,21 @@ module EntityInfo =
 
     [<CompiledName "Map">]
     let map mapping entityInfo =
-        entityInfo.LatestResult
-        |> Option.map
-            (fun latestResult ->
-                match latestResult.Stamp, latestResult.LatestItem with
-                | { Time = time1; Item = Ok item1 }, Some { Time = time2; Item = item2 }
-                        when time1 = time2 && item1 = item2 ->
-                    let time = time1
-                    let item = (mapping item1)
-                    { Stamp = Stamp.ofValues time (Ok item);
-                      LatestItem = Some (Stamp.ofValues time item) }
-                | _ ->
-                    { Stamp = latestResult.Stamp |> Stamp.map (Result.map mapping);
-                      LatestItem = latestResult.LatestItem |> Option.map (Stamp.map mapping) })
+        { Status = entityInfo.Status;
+          LatestResult =
+            entityInfo.LatestResult
+            |> Option.map
+                (fun latestResult ->
+                    match latestResult.Stamp, latestResult.LatestItem with
+                    | { Time = time1; Item = Ok item1 }, Some { Time = time2; Item = item2 }
+                            when time1 = time2 && item1 = item2 ->
+                        let time = time1
+                        let item = (mapping item1)
+                        { Stamp = Stamp.ofValues time (Ok item);
+                          LatestItem = Some (Stamp.ofValues time item) }
+                    | _ ->
+                        { Stamp = latestResult.Stamp |> Stamp.map (Result.map mapping);
+                          LatestItem = latestResult.LatestItem |> Option.map (Stamp.map mapping) }) }
 
 
     [<CompiledName "MapTo">]
@@ -74,17 +76,17 @@ module EntityInfo =
 
 
     [<CompiledName "WithStatus">]
-    let withStatus stamp entityInfo =
-        { entityInfo with Status = stamp }
+    let withStatus status entityInfo =
+        { entityInfo with Status = status }
 
 
     [<CompiledName "WithOfflineStatus">]
-    let withOfflineStatus stamp entityInfo =
+    let withOfflineStatus entityInfo =
         { entityInfo with Status = Offline }
 
 
     [<CompiledName "WithOnlineStatus">]
-    let withOnlineStatus stamp entityInfo =
+    let withOnlineStatus entityInfo =
         { entityInfo with Status = Online }
 
 

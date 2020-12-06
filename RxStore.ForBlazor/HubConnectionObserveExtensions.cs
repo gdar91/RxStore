@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+﻿using Fills;
+using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -13,24 +14,13 @@ namespace RxStore
             object[] args
         )
         {
-            return Observable.Create<TResult>(async (observer, cancellationToken) =>
-            {
-                var asyncEnumerable =
-                    hubConnection.StreamAsyncCore<TResult>(
-                        methodName,
-                        args,
-                        cancellationToken
-                    );
-
-                await foreach (var item in asyncEnumerable)
-                {
-                    observer.OnNext(item);
-                }
-
-                observer.OnCompleted();
-
-                return Disposable.Empty;
-            });
+            return FillsObservable.FromAsyncEnumerable(cancellationToken =>
+                hubConnection.StreamAsyncCore<TResult>(
+                    methodName,
+                    args,
+                    cancellationToken
+                )
+            );
         }
 
 

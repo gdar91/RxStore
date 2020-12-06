@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using Fills;
+using Microsoft.AspNetCore.Components;
 using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -15,7 +16,7 @@ namespace RxStore
             Views =
                 viewsSubject
                     .DistinctUntilChanged()
-                    .Replay(1)
+                    .ReplayScoped(1)
                     .RefCount();
         }
 
