@@ -5,74 +5,43 @@ type EntityInfo<'TItem> = EntityInfo<'TItem, EntityError>
 
 and EntityInfo<'TItem, 'TError> =
     { Status: EntityInfoStatus;
-      LatestResult: EntityInfoResult<'TItem, 'TError> option; }
-
+      LastOk: 'TItem Stamp option;
+      LastError: 'TError Stamp option }
 
 and EntityInfoStatus = Offline | Online
 
-
-and EntityInfoResult<'T, 'TError> =
-    { Stamp: Result<'T, 'TError> Stamp;
-      LatestItem: 'T Stamp option }
-
-
 and EntityError = string
-
-
 
 
 module EntityInfo =
 
     [<CompiledName "Map">]
     let map mapping entityInfo =
-        { Status = entityInfo.Status;
-          LatestResult =
-            entityInfo.LatestResult
-            |> Option.map
-                (fun latestResult ->
-                    match latestResult.Stamp, latestResult.LatestItem with
-                    | { Time = time1; Item = Ok item1 }, Some { Time = time2; Item = item2 }
-                            when time1 = time2 && item1 = item2 ->
-                        let time = time1
-                        let item = (mapping item1)
-                        { Stamp = Stamp.ofValues time (Ok item);
-                          LatestItem = Some (Stamp.ofValues time item) }
-                    | _ ->
-                        { Stamp = latestResult.Stamp |> Stamp.map (Result.map mapping);
-                          LatestItem = latestResult.LatestItem |> Option.map (Stamp.map mapping) }) }
-
+        { entityInfo with
+            LastOk = entityInfo.LastOk |> Option.map (Stamp.map mapping) }
 
     [<CompiledName "MapTo">]
     let mapTo item entityInfo =
         entityInfo |> map (fun _ -> item)
 
 
+    [<CompiledName "Result">]
+    let result entityInfo =
+        entityInfo.LastOk
+        |> Option.map (Stamp.map Ok)
+        |> Option.orElseWith (fun () -> entityInfo.LastError |> Option.map (Stamp.map Error))
+        
+            
+
+
     // TODO ZipWith
-
-
-    [<CompiledName "LatestItem">]
-    let latestItem entityInfo =
-        entityInfo.LatestResult
-        |> Option.bind (fun latestResult -> latestResult.LatestItem)
-
-
-    [<CompiledName "Item">]
-    let item entityInfo =
-        entityInfo.LatestResult
-        |> Option.bind
-            (fun latestResult ->
-                match latestResult.LatestItem with
-                | Some stamp -> Some stamp
-                | None ->
-                    match latestResult.Stamp.Item with
-                    | Ok item -> Some (latestResult.Stamp |> Stamp.mapTo item)
-                    | Error _ -> None)
 
 
     [<CompiledName "Empty">]
     let empty =
         { Status = Offline;
-          LatestResult = None }
+          LastOk = None;
+          LastError = None }
 
 
     [<CompiledName "WithStatus">]
@@ -90,78 +59,39 @@ module EntityInfo =
         { entityInfo with Status = Online }
 
 
-    [<CompiledName "WithResult">]
-    let withResult stamp entityInfo =
-        { entityInfo with
-            LatestResult =
-                { Stamp = stamp;
-                  LatestItem =
-                    match stamp.Item with
-                    | Ok item ->
-                        stamp
-                        |> Stamp.mapTo item
-                        |> Some
-                    | Error _ ->
-                        entityInfo.LatestResult
-                        |> Option.bind (fun latestResult -> latestResult.LatestItem) }
-                |> Some }
-
-
-    [<CompiledName "WithCompletingResult">]
-    let withCompletingResult stamp entityInfo =
-        { entityInfo with
-            Status = Offline;
-            LatestResult =
-                { Stamp = stamp;
-                  LatestItem =
-                    match stamp.Item with
-                    | Ok item ->
-                        stamp
-                        |> Stamp.mapTo item
-                        |> Some
-                    | Error _ ->
-                        entityInfo.LatestResult
-                        |> Option.bind (fun latestResult -> latestResult.LatestItem) }
-                |> Some }
-
-
     [<CompiledName "WithError">]
     let withError stamp entityInfo =
-        { entityInfo with
-            LatestResult =
-                { Stamp = stamp |> Stamp.map Error;
-                  LatestItem =
-                    entityInfo.LatestResult
-                    |> Option.bind (fun latestResult -> latestResult.LatestItem) }
-                |> Some }
+        { entityInfo with LastError = Some stamp }
 
 
     [<CompiledName "WithCompletingError">]
     let withCompletingError stamp entityInfo =
         { entityInfo with
             Status = Offline;
-            LatestResult =
-                { Stamp = stamp |> Stamp.map Error;
-                  LatestItem =
-                    entityInfo.LatestResult
-                    |> Option.bind (fun latestResult -> latestResult.LatestItem) }
-                |> Some }
+            LastError = Some stamp }
 
 
     [<CompiledName "WithOk">]
     let withOk stamp entityInfo =
-        { entityInfo with
-            LatestResult =
-                { Stamp = stamp |> Stamp.map Ok;
-                  LatestItem = Some stamp }
-                |> Some }
+        { entityInfo with LastOk = Some stamp }
 
 
     [<CompiledName "WithCompletingOk">]
     let withCompletingOk stamp entityInfo =
         { entityInfo with
             Status = Offline;
-            LatestResult =
-                { Stamp = stamp |> Stamp.map Ok;
-                  LatestItem = Some stamp }
-                |> Some }
+            LastOk = Some stamp }
+
+
+    [<CompiledName "WithResult">]
+    let withResult stamp entityInfo =
+        match stamp.Item with
+        | Ok ok -> entityInfo |> withOk stamp
+        | Error error -> entityInfo |> withError stamp
+
+
+    [<CompiledName "WithCompletingResult">]
+    let withCompletingResult stamp entityInfo =
+        match stamp.Item with
+        | Ok ok -> entityInfo |> withCompletingOk stamp
+        | Error error -> entityInfo |> withCompletingError stamp

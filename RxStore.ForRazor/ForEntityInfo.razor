@@ -4,25 +4,20 @@
 @typeparam TError
 
 
-<ForOption Of="Of.LatestResult">
-    <WhenNone></WhenNone>
-    <WhenSome Context="latestResult">
-        <ForOption Of="latestResult.LatestItem">
+<ForOption Of="Of.LastOk">
+    <WhenSome Context="stamp">
+        @WhenOk(stamp)
+    </WhenSome>
+    <WhenNone>
+        <ForOption Of="Of.LastError">
             <WhenSome Context="stamp">
-                @WhenItem(stamp)
+                @WhenError(stamp)
             </WhenSome>
             <WhenNone>
-                <ForResult Of="latestResult.Stamp.Item">
-                    <WhenOk Context="item">
-                        @WhenItem(Stamp.MapTo(item, latestResult.Stamp))
-                    </WhenOk>
-                    <WhenError Context="error">
-                        @WhenError(Stamp.MapTo(error, latestResult.Stamp))
-                    </WhenError>
-                </ForResult>
+                @WhenNone
             </WhenNone>
         </ForOption>
-    </WhenSome>
+    </WhenNone>
 </ForOption>
 
 
@@ -32,11 +27,11 @@
     public EntityInfo<T, TError> Of { get; set; }
 
     [Parameter]
-    public RenderFragment WhenNothing { get; set; }
+    public RenderFragment WhenNone { get; set; }
 
     [Parameter]
     public RenderFragment<Stamp<TError>> WhenError { get; set; }
 
     [Parameter]
-    public RenderFragment<Stamp<T>> WhenItem { get; set; }
+    public RenderFragment<Stamp<T>> WhenOk { get; set; }
 }
