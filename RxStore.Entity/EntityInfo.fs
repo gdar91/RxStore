@@ -17,8 +17,9 @@ module EntityInfo =
 
     [<CompiledName "Map">]
     let map mapping entityInfo =
-        { entityInfo with
-            LastOk = entityInfo.LastOk |> Option.map (Stamp.map mapping) }
+        { Status = entityInfo.Status;
+          LastOk = entityInfo.LastOk |> Option.map (Stamp.map mapping);
+          LastError = entityInfo.LastError }
 
     [<CompiledName "MapTo">]
     let mapTo item entityInfo =
