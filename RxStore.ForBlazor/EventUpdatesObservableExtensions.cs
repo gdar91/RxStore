@@ -14,7 +14,7 @@ namespace RxStore
     public static class EventUpdatesObservableExtensions
     {
         public static IObservable<Versioned<TVersion, TState>> EventUpdates<TVersion, TState, TEvent>(
-            this IObservable<Versioned<TVersion, FSharpChoice<TState, TEvent>>> observable,
+            this IObservable<Versioned<TVersion, FSharpChoice<TState, TEvent, Unit>>> observable,
             TState initialState,
             Func<TState, TEvent, TState> reducer,
             TVersion initialVersion,
@@ -27,7 +27,7 @@ namespace RxStore
                     (Versioned.OfValues(initialVersion, initialState), true),
                     (accumulator, element) => element.Item switch
                     {
-                        FSharpChoice<TState, TEvent>.Choice1Of2 { Item: var state } =>
+                        FSharpChoice<TState, TEvent, Unit>.Choice1Of3 { Item: var state } =>
                             stateVersionsAction(accumulator.Item1.Version, element.Version) switch
                             {
                                 EventUpdateAction.Stay =>
@@ -39,7 +39,7 @@ namespace RxStore
                                 var other =>
                                     throw new Exception($"Impossible enum element {other}.")
                             },
-                        FSharpChoice<TState, TEvent>.Choice2Of2 { Item: var @event } =>
+                        FSharpChoice<TState, TEvent, Unit>.Choice2Of3 { Item: var @event } =>
                             eventVersionsAction(accumulator.Item1.Version, element.Version) switch
                             {
                                 EventUpdateAction.Stay =>
@@ -57,6 +57,8 @@ namespace RxStore
                                 var other =>
                                     throw new Exception($"Impossible enum element {other}.")
                             },
+                        FSharpChoice<TState, TEvent, Unit>.Choice3Of3 _ =>
+                            accumulator,
                         var other => throw new Exception($"Impossible union case {other}.")
                     }
                 )
@@ -66,7 +68,7 @@ namespace RxStore
 
 
         public static IObservable<Versioned<long, TState>> EventUpdates<TState, TEvent>(
-            this IObservable<Versioned<long, FSharpChoice<TState, TEvent>>> observable,
+            this IObservable<Versioned<long, FSharpChoice<TState, TEvent, Unit>>> observable,
             TState initialState,
             Func<TState, TEvent, TState> reducer,
             long initialVersion = -1L
