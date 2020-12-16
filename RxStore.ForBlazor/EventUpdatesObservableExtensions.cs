@@ -92,5 +92,53 @@ namespace RxStore
                 }
             );
         }
+
+
+        public static IObservable<Versioned<DynamicVersion, TState>> EventUpdates<TState, TEvent>(
+            this IObservable<Versioned<DynamicVersion, FSharpChoice<TState, TEvent, Unit>>> observable,
+            TState initialState,
+            Func<TState, TEvent, TState> reducer,
+            DynamicVersion initialVersion,
+            long zeroVersionValue = -1L
+        )
+        {
+            return EventUpdates(
+                observable,
+                initialState,
+                reducer,
+                initialVersion,
+                (version0, version1) => (version0, version1) switch
+                {
+                    var (a, b) when a.Lifeline < b.Lifeline =>
+                        EventUpdateAction.Advance,
+                    var (a, b) when
+                            a.Lifeline == b.Lifeline &&
+                            a.Value < b.Value =>
+                        EventUpdateAction.Advance,
+                    var (a, b) =>
+                        EventUpdateAction.Stay
+                },
+                (version0, version1) => (version0, version1) switch
+                {
+                    var (a, b) when
+                            a.Lifeline == b.Lifeline &&
+                            a.Value + 1L == b.Value =>
+                        EventUpdateAction.Advance,
+                    var (a, b) when
+                            a.Lifeline == b.Lifeline &&
+                            a.Value < b.Value =>
+                        EventUpdateAction.RaiseMismatch,
+                    var (a, b) when a.Lifeline >= b.Lifeline =>
+                        EventUpdateAction.Stay,
+                    var (a, b) when
+                            a.Lifeline == DateTimeOffset.MinValue &&
+                            a.Value == zeroVersionValue &&
+                            b.Value == a.Value + 1L =>
+                        EventUpdateAction.Advance,
+                    var (a, b) =>
+                        EventUpdateAction.RaiseMismatch
+                }
+            );
+        }
     }
 }

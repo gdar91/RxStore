@@ -9,6 +9,10 @@ type Versioned<'Item> = Versioned<Version, 'Item>
 
 and Version = int64
 
+and DynamicVersion =
+    { Lifeline: System.DateTimeOffset;
+      Value: Version }
+
 
 module Versioned =
 
@@ -31,3 +35,13 @@ module Versioned =
     let zipWith func versionedA versionedB =
         { Version = versionedB.Version;
           Item = func versionedA.Item versionedB.Item }
+
+
+type Transition<'State, 'Event> =
+    { State: 'State;
+      Event: 'Event }
+
+type Update<'Version, 'State, 'Event> =
+| DoNotModify
+| Replace of 'State
+| Update of 'Event
