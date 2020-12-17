@@ -17,7 +17,7 @@ namespace RxStore
                 Events
                     .Scan(initialStateTransition, StateTransition.LiftReducer(reducer))
                     .StartWith(initialStateTransition)
-                    .Publish()
+                    .Replay(1)
                     .AutoConnect();
 
             States =

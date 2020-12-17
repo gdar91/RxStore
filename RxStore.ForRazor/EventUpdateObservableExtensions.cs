@@ -4,17 +4,76 @@ using System.Reactive.Linq;
 
 namespace RxStore
 {
-    public enum EventUpdateAction
+    public static class EventUpdateObservableExtensions
     {
-        Stay,
-        Advance,
-        RaiseMismatch
-    }
+        public static IObservable<EventUpdate<TVersion, TState, TEvent>> AsEventUpdates<TVersion, TState, TEvent>(
+            this IObservable<EventTransition<TVersion, TState, TEvent>> observable,
+            TVersion availableVersion,
+            Func<TVersion, TVersion, bool> versionIsSame,
+            Func<TVersion, TVersion, bool> versionIsSuccessor
+        )
+        {
+            return observable
+                .Select((transition, index) =>
+                    (index, availableVersion, transition.Version) switch
+                    {
+                        (0, var v0, var v1) when versionIsSame(v0, v1) =>
+                            EventUpdate.OfUnit(transition),
+                        (0, var v0, var v1) when versionIsSuccessor(v0, v1) =>
+                            EventUpdate.OfEvent(transition),
+                        (0, _, _) =>
+                            EventUpdate.OfState(transition),
+                        (_, _, _) =>
+                            EventUpdate.OfEvent(transition)
+                    }
+                );
+        }
 
-    public static class EventUpdatesObservableExtensions
-    {
-        public static IObservable<Versioned<TVersion, TState>> EventUpdates<TVersion, TState, TEvent>(
-            this IObservable<Versioned<TVersion, FSharpChoice<TState, TEvent, Unit>>> observable,
+
+        public static IObservable<EventUpdate<long, TState, TEvent>> AsEventUpdates<TState, TEvent>(
+            this IObservable<EventTransition<long, TState, TEvent>> observable,
+            long availableVersion
+        )
+        {
+            return AsEventUpdates(
+                observable,
+                availableVersion,
+                (version0, version1) => version0 == version1,
+                (version0, version1) => version0 + 1L == version1
+            );
+        }
+
+
+        public static IObservable<EventUpdate<DynamicVersion, TState, TEvent>> AsEventUpdates<TState, TEvent>(
+            this IObservable<EventTransition<DynamicVersion, TState, TEvent>> observable,
+            DynamicVersion availableVersion,
+            long zeroVersionValue = -1L
+        )
+        {
+            return AsEventUpdates(
+                observable,
+                availableVersion,
+                (version0, version1) => object.Equals(version0, version1),
+                (version0, version1) => (version0, version1) switch
+                {
+                    (var v0, var v1) when
+                            v0.Lifeline == v1.Lifeline &&
+                            v0.Value + 1L == v1.Value =>
+                        true,
+                    (var v0, var v1) when
+                            v0.Lifeline == DateTimeOffset.MinValue &&
+                            v0.Value == zeroVersionValue &&
+                            v0.Value + 1L == v1.Value =>
+                        true,
+                    (_, _) =>
+                        false
+                }
+            );
+        }
+
+
+        public static IObservable<Versioned<TVersion, TState>> OfEventUpdates<TVersion, TState, TEvent>(
+            this IObservable<EventUpdate<TVersion, TState, TEvent>> observable,
             TState initialState,
             Func<TState, TEvent, TState> reducer,
             TVersion initialVersion,
@@ -25,7 +84,7 @@ namespace RxStore
             return observable
                 .Scan(
                     (Versioned.OfValues(initialVersion, initialState), true),
-                    (accumulator, element) => element.Item switch
+                    (accumulator, element) => element.Value switch
                     {
                         FSharpChoice<TState, TEvent, Unit>.Choice1Of3 { Item: var state } =>
                             stateVersionsAction(accumulator.Item1.Version, element.Version) switch
@@ -67,14 +126,14 @@ namespace RxStore
         }
 
 
-        public static IObservable<Versioned<long, TState>> EventUpdates<TState, TEvent>(
-            this IObservable<Versioned<long, FSharpChoice<TState, TEvent, Unit>>> observable,
+        public static IObservable<Versioned<long, TState>> OfEventUpdates<TState, TEvent>(
+            this IObservable<EventUpdate<long, TState, TEvent>> observable,
             TState initialState,
             Func<TState, TEvent, TState> reducer,
             long initialVersion = -1L
         )
         {
-            return EventUpdates(
+            return OfEventUpdates(
                 observable,
                 initialState,
                 reducer,
@@ -94,15 +153,15 @@ namespace RxStore
         }
 
 
-        public static IObservable<Versioned<DynamicVersion, TState>> EventUpdates<TState, TEvent>(
-            this IObservable<Versioned<DynamicVersion, FSharpChoice<TState, TEvent, Unit>>> observable,
+        public static IObservable<Versioned<DynamicVersion, TState>> OfEventUpdates<TState, TEvent>(
+            this IObservable<EventUpdate<DynamicVersion, TState, TEvent>> observable,
             TState initialState,
             Func<TState, TEvent, TState> reducer,
             DynamicVersion initialVersion,
             long zeroVersionValue = -1L
         )
         {
-            return EventUpdates(
+            return OfEventUpdates(
                 observable,
                 initialState,
                 reducer,

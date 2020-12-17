@@ -1,5 +1,5 @@
 (function() {
-    window.___RxStore___DevTools___ =
+    window['__RxStore_ForBlazor_DevTools__'] =
         '__REDUX_DEVTOOLS_EXTENSION__' in window
             ? whenExtensionAvailable()
             : whenExtensionNotAvailable();
@@ -9,7 +9,7 @@
         return {
             connections: { },
 
-            OnInitialState(instanceName, stateJson) {
+            OnInitial(instanceName, stateJson) {
                 if (!!this.connections[instanceName]) {
                     return false;
                 }
@@ -39,15 +39,15 @@
                 return true;
             },
 
-            OnAction(instanceName, actionJson, stateJson) {
+            OnEvent(instanceName, eventJson, stateJson) {
                 if (!this.connections[instanceName]) {
                     return false;
                 }
 
-                const action = JSON.parse(actionJson);
+                const event = JSON.parse(eventJson);
                 const state = JSON.parse(stateJson);
 
-                this.connections[instanceName].send(action, state);
+                this.connections[instanceName].send(event, state);
 
                 return true;
             }
