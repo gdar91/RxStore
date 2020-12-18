@@ -3,7 +3,7 @@ namespace RxStore
 
 type Versioned<'Version, 'Item> =
     { Version: 'Version;
-      Item: 'Item;}
+      Item: 'Item }
 
 type Versioned<'Item> = Versioned<Version, 'Item>
 
@@ -35,13 +35,3 @@ module Versioned =
     let zipWith func versionedA versionedB =
         { Version = versionedB.Version;
           Item = func versionedA.Item versionedB.Item }
-
-
-type Transition<'State, 'Event> =
-    { State: 'State;
-      Event: 'Event }
-
-type Update<'Version, 'State, 'Event> =
-| DoNotModify
-| Replace of 'State
-| Update of 'Event
