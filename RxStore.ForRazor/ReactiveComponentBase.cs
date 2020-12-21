@@ -13,6 +13,7 @@ namespace RxStore
         {
             Disposes =
                 DisposesSubject
+                    .Synchronize()
                     .Take(1)
                     .Replay(1)
                     .AutoConnect(0);
@@ -20,6 +21,7 @@ namespace RxStore
 
             Initializes =
                 InitializesSubject
+                    .Synchronize()
                     .TakeUntil(Disposes)
                     .Publish()
                     .AutoConnect(0);
@@ -27,20 +29,23 @@ namespace RxStore
 
             SetParameters =
                 SetParametersSubject
+                    .Synchronize()
                     .TakeUntil(Disposes)
                     .Publish()
                     .AutoConnect(0);
 
 
             ParametersSets =
-               ParametersSetsSubject
-                   .TakeUntil(Disposes)
-                   .Publish()
-                   .AutoConnect(0);
+                ParametersSetsSubject
+                    .Synchronize()
+                    .TakeUntil(Disposes)
+                    .Publish()
+                    .AutoConnect(0);
 
 
             AfterRenders =
                 AfterRendersSubject
+                    .Synchronize()
                     .TakeUntil(Disposes)
                     .Publish()
                     .AutoConnect(0);
@@ -49,22 +54,18 @@ namespace RxStore
 
 
 
-        protected override void OnInitialized() =>
-            InitializesSubject.OnNext(Unit.Default);
+        protected override void OnInitialized() => InitializesSubject.OnNext(Unit.Default);
 
-        private ISubject<Unit> InitializesSubject { get; } =
-            Subject.Synchronize(new Subject<Unit>());
+        private Subject<Unit> InitializesSubject { get; } = new Subject<Unit>();
 
         protected IObservable<Unit> Initializes { get; }
 
 
 
 
-        public void Dispose() =>
-            DisposesSubject.OnNext(Unit.Default);
+        public void Dispose() => DisposesSubject.OnNext(Unit.Default);
 
-        private ISubject<Unit> DisposesSubject { get; } =
-            Subject.Synchronize(new Subject<Unit>());
+        private Subject<Unit> DisposesSubject { get; } = new Subject<Unit>();
 
         protected IObservable<Unit> Disposes { get; }
 
@@ -79,18 +80,16 @@ namespace RxStore
         }
 
         private ISubject<ParameterView> SetParametersSubject { get; } =
-            Subject.Synchronize(new Subject<ParameterView>());
+            new Subject<ParameterView>();
 
         protected IObservable<ParameterView> SetParameters { get; }
 
 
 
 
-        protected override void OnParametersSet() =>
-            ParametersSetsSubject.OnNext(Unit.Default);
+        protected override void OnParametersSet() => ParametersSetsSubject.OnNext(Unit.Default);
 
-        private ISubject<Unit> ParametersSetsSubject { get; } =
-            Subject.Synchronize(new Subject<Unit>());
+        private Subject<Unit> ParametersSetsSubject { get; } = new Subject<Unit>();
 
         protected IObservable<Unit> ParametersSets { get; }
 
@@ -100,8 +99,7 @@ namespace RxStore
         protected override void OnAfterRender(bool firstRender) =>
             AfterRendersSubject.OnNext(firstRender);
 
-        private ISubject<bool> AfterRendersSubject { get; } =
-            Subject.Synchronize(new Subject<bool>());
+        private Subject<bool> AfterRendersSubject { get; } = new Subject<bool>();
 
         protected IObservable<bool> AfterRenders { get; }
 

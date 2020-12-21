@@ -1,5 +1,4 @@
-﻿using Fills;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -9,15 +8,17 @@ namespace RxStore
 {
     public abstract class PureComponentBase<TView, TCommand> : ReactiveComponentBase
     {
-        private ReplaySubject<TView> viewsSubject = new ReplaySubject<TView>(1);
+        private readonly ReplaySubject<TView> viewsSubject = new ReplaySubject<TView>(1);
 
         protected PureComponentBase()
         {
             Views =
                 viewsSubject
+                    .Synchronize()
                     .DistinctUntilChanged()
-                    .ReplayScoped(1)
-                    .RefCount();
+                    .TakeUntil(Disposes)
+                    .Replay(1)
+                    .AutoConnect(0);
         }
 
         protected IObservable<TView> Views { get; }

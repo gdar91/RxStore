@@ -20,11 +20,10 @@
 
 @code
 {
-    private readonly ISubject<IObservable<T>> sourcesSubject =
-        Subject.Synchronize(new Subject<IObservable<T>>());
+    private readonly Subject<IObservable<T>> sourcesSubject = new Subject<IObservable<T>>();
 
-    private readonly ISubject<RenderFragment<T>> childContentsSubject =
-        Subject.Synchronize(new Subject<RenderFragment<T>>());
+    private readonly Subject<RenderFragment<T>> childContentsSubject =
+        new Subject<RenderFragment<T>>();
 
 
     private readonly object gate = new object();

@@ -5,7 +5,7 @@ using System.Reactive.Subjects;
 
 namespace RxStore
 {
-    public interface IHandler<TCommand, TEvent> : ISubject<TCommand, TEvent>
+    public interface IHandler<in TCommand, out TEvent> : ISubject<TCommand, TEvent>
     { }
 
 
@@ -21,8 +21,7 @@ namespace RxStore
         }
 
 
-        private ISubject<TCommand> Commands { get; } =
-            Subject.Synchronize(new Subject<TCommand>());
+        private Subject<TCommand> Commands { get; } = new Subject<TCommand>();
 
         private IObservable<TEvent> Events { get; }
 

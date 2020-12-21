@@ -15,6 +15,7 @@ namespace RxStore
 
             StateTransitions =
                 Events
+                    .Synchronize()
                     .Scan(initialStateTransition, StateTransition.LiftReducer(reducer))
                     .StartWith(initialStateTransition)
                     .Replay(1)
@@ -29,7 +30,7 @@ namespace RxStore
         }
 
 
-        private ISubject<TEvent> Events { get; } = Subject.Synchronize(new Subject<TEvent>());
+        private Subject<TEvent> Events { get; } = new Subject<TEvent>();
 
 
         internal IObservable<StateTransition> StateTransitions { get; }
