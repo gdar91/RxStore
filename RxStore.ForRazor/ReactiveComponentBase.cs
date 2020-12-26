@@ -110,5 +110,40 @@ namespace RxStore
 
 
         protected bool DefaultShouldRender() => base.ShouldRender();
+
+
+
+
+        protected PropertySubject<T> Property<T>() => new PropertySubject<T>(Disposes);
+
+
+        public sealed class PropertySubject<T> : ISubject<T>
+        {
+            private readonly ReplaySubject<T> subject = new ReplaySubject<T>(1);
+
+            private readonly IObservable<T> observable;
+
+
+            internal PropertySubject(IObservable<Unit> takeUntil)
+            {
+                observable =
+                    subject
+                        .Synchronize()
+                        .DistinctUntilChanged()
+                        .TakeUntil(takeUntil)
+                        .Replay(1)
+                        .AutoConnect(0);
+            }
+
+
+            public void OnNext(T value) => subject.OnNext(value);
+
+            public void OnError(Exception error) => subject.OnError(error);
+
+            public void OnCompleted() => subject.OnCompleted();
+
+
+            public IDisposable Subscribe(IObserver<T> observer) => observable.Subscribe(observer);
+        }
     }
 }

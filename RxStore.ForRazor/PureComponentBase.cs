@@ -8,23 +8,15 @@ namespace RxStore
 {
     public abstract class PureComponentBase<TView, TCommand> : ReactiveComponentBase
     {
-        private readonly ReplaySubject<TView> viewsSubject = new ReplaySubject<TView>(1);
-
         protected PureComponentBase()
         {
-            Views =
-                viewsSubject
-                    .Synchronize()
-                    .DistinctUntilChanged()
-                    .TakeUntil(Disposes)
-                    .Replay(1)
-                    .AutoConnect(0);
+            Views = Property<TView>();
         }
 
-        protected IObservable<TView> Views { get; }
+        protected PropertySubject<TView> Views { get; }
 
         [Parameter]
-        public TView View { set => viewsSubject.OnNext(value); }
+        public TView View { set => Views.OnNext(value); }
 
         [Parameter]
         public EventCallback<TCommand> OnCommand { get; set; }

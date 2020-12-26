@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net5.0;netstandard2.1;</TargetFrameworks>
-    <Version>0.16.0-pre909</Version>
+    <Version>0.16.0-pre910</Version>
     <Authors>Giorgi Darchiashvili</Authors>
     <Company>MIA LEPL 112</Company>
     <Description>Strongly-typed client-side entity management for RxStore.</Description>
