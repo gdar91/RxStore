@@ -42,7 +42,8 @@ namespace RxStore
 
         public void OnError(Exception error) => Events.OnError(error);
 
-        public void OnCompleted() => Events.OnCompleted();
+        public void OnCompleted()
+        { }
 
 
         public IDisposable Subscribe(IObserver<TState> observer) => States.Subscribe(observer);
