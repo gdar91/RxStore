@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net5.0;netstandard2.1;</TargetFrameworks>
-    <Version>0.16.0-pre910</Version>
+    <Version>0.16.0-pre911</Version>
     <Authors>Giorgi Darchiashvili</Authors>
     <Company>MIA LEPL 112</Company>
     <Description>RxStore for Razor.</Description>
@@ -15,11 +15,15 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net5.0'">
-    <PackageReference Include="Microsoft.AspNetCore.Components" Version="5.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="5.0.2" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="3.1.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fills.Observable" Version="0.0.9" />
   </ItemGroup>
 
   <ItemGroup>
