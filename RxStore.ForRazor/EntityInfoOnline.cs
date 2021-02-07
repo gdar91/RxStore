@@ -1,72 +1,36 @@
-﻿using Microsoft.AspNetCore.Components;
-using System;
-using System.Collections.Generic;
-using System.Reactive.Disposables;
+﻿using System;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 namespace RxStore
 {
-    public abstract class EntityInfoOnline<TEvent> : IObservable<TEvent>
+    public abstract class EntityInfoOnline<TEvent> : EntityOnline<TEvent>, IObservable<Unit>
     {
-        private readonly Subject<bool> requestsSubject;
-
-        private readonly IObservable<TEvent> observable;
+        private readonly IObservable<Unit> observable;
 
 
         public EntityInfoOnline()
         {
-            requestsSubject = new Subject<bool>();
-
             observable =
                 Observable
-                    .Using(
-                        () =>
-                        {
-                            requestsSubject.OnNext(true);
+                    .Create<Unit>(observer =>
+                    {
+                        var whenOfflineSubject = new ReplaySubject<Unit>(1);
+                        var whenOffline = whenOfflineSubject.AsObservable();
 
-                            return Disposable.Create(() => requestsSubject.OnNext(false));
-                        },
-                        disposable => Observable.Never<TEvent>()
-                    )
+                        OnNextOutEventsObservable(WhenOnline(whenOffline));
+
+                        return () => whenOfflineSubject.OnNext(Unit.Default);
+                    })
                     .Publish()
                     .RefCount();
-
-            Handler = new InnerHandler(this);
         }
 
 
-        public IHandler<Never, TEvent> Handler { get; }
+        protected abstract IObservable<TEvent> WhenOnline(IObservable<Unit> whenOffline);
 
 
-        protected abstract IObservable<TEvent> Online();
-
-
-        public IDisposable Subscribe(IObserver<TEvent> observer) => observable.Subscribe(observer);
-
-
-        private sealed class InnerHandler : Handler<Never, TEvent>
-        {
-            private readonly EntityInfoOnline<TEvent> entityInfoOnline;
-
-
-            public InnerHandler(EntityInfoOnline<TEvent> entityInfoOnline)
-            {
-                this.entityInfoOnline = entityInfoOnline;
-            }
-
-
-            protected override IEnumerable<IObservable<TEvent>> Setup(IObservable<Never> commands)
-            {
-                yield return entityInfoOnline.requestsSubject
-                    .DistinctUntilChanged()
-                    .Select(online =>
-                        online
-                            ? entityInfoOnline.Online()
-                            : Observable.Empty<TEvent>()
-                    )
-                    .Switch();
-            }
-        }
+        public IDisposable Subscribe(IObserver<Unit> observer) => observable.Subscribe(observer);
     }
 }

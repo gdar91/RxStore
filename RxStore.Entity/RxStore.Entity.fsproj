@@ -2,13 +2,17 @@
 
   <PropertyGroup>
     <TargetFrameworks>net5.0;netstandard2.1;</TargetFrameworks>
-    <Version>0.16.0-pre912</Version>
+    <Version>0.16.0-pre913</Version>
     <Authors>Giorgi Darchiashvili</Authors>
     <Company>MIA LEPL 112</Company>
     <Description>Strongly-typed client-side entity management for RxStore.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/gdar91/RxStore</RepositoryUrl>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="C:\Users\gdar9\.nuget\packages\fsharp.core\5.0.1-beta.20607.1\contentFiles\any\netstandard2.0\FSharp.Core.xml" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Include="Never.fs" />

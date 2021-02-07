@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net5.0;netstandard2.1;</TargetFrameworks>
-    <Version>0.16.0-pre912</Version>
+    <Version>0.16.0-pre913</Version>
     <Authors>Giorgi Darchiashvili</Authors>
     <Company>MIA LEPL 112</Company>
     <Description>RxStore for Razor.</Description>
@@ -12,6 +12,7 @@
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
     <RazorLangVersion>3.0</RazorLangVersion>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net5.0'">
@@ -23,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Fills.Observable" Version="0.0.9" />
+    <PackageReference Include="Fills.Observable" Version="0.0.92" />
   </ItemGroup>
 
   <ItemGroup>
