@@ -6,7 +6,7 @@ using System.Reactive.Subjects;
 
 namespace RxStore
 {
-    public abstract class EntitySetOnline<TKey, TEvent> : EntityOnline<TEvent>
+    public abstract class EntitySetOnline<TKey, TEvent> : EntityOnline<TEvent>, IMemo<TKey, IObservable<Unit>>
     {
         private readonly Memo<TKey, IObservable<Unit>> byKey;
 
