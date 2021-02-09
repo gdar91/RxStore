@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net5.0;netstandard2.1;</TargetFrameworks>
-    <Version>0.16.0-pre915</Version>
+    <Version>0.16.0-pre916</Version>
     <Authors>Giorgi Darchiashvili</Authors>
     <Company>MIA LEPL 112</Company>
     <Description>RxStore for Razor.</Description>
