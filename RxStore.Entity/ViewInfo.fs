@@ -42,7 +42,13 @@ module ViewInfo =
         viewInfo1
         |> map (fun view1 view2 -> view1, view2)
         |> fun viewInfo -> apply viewInfo viewInfo2
-    
+
+    [<CompiledName "CombineWith">]
+    let combineWith viewInfo2 viewInfo =
+        viewInfo
+        |> map (fun view1 view2 -> view1, view2)
+        |> fun viewInfo -> apply viewInfo viewInfo2
+
     [<CompiledName "Join">]
     let join viewInfo =
         { View = viewInfo.View.View;
@@ -60,15 +66,18 @@ module ViewInfo =
         ||> Seq.fold
             (fun state element ->
                 element
-                |> bind
-                    (fun item ->
-                        state
-                            |> map
-                                (fun sequence ->
-                                    seq { yield! sequence; yield item })))
+                |> map (fun item sequence -> seq { yield! sequence; yield item })
+                |> fun applying -> state |> apply applying)
 
     [<CompiledName "SequenceOption">]
     let sequenceOption viewInfoOption =
+        //(result None, viewInfoOption)
+        //||> Option.fold
+        //    (fun state element ->
+        //        combineWith
+        //            state
+        //            element
+        //            (fun option item -> Some item))
         match viewInfoOption with
         | Some viewInfo -> viewInfo |> map Some
         | None -> result None
