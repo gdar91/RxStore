@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net5.0;netstandard2.1;</TargetFrameworks>
-    <Version>0.16.0-pre918</Version>
+    <Version>0.16.0-pre919</Version>
     <Authors>Giorgi Darchiashvili</Authors>
     <Company>MIA LEPL 112</Company>
     <Description>RxStore for Razor.</Description>
@@ -16,17 +16,17 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net5.0'">
-    <PackageReference Include="Microsoft.AspNetCore.Components" Version="5.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="5.0.4" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
-    <PackageReference Include="Microsoft.AspNetCore.Components" Version="3.1.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="3.1.13" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Fills.Enumerable" Version="0.0.94" />
-    <PackageReference Include="Fills.FSharp" Version="0.0.94" />
-    <PackageReference Include="Fills.Observable" Version="0.0.94" />
+    <PackageReference Include="Fills.Enumerable" Version="0.0.97" />
+    <PackageReference Include="Fills.FSharp" Version="0.0.97" />
+    <PackageReference Include="Fills.Observable" Version="0.0.97" />
   </ItemGroup>
 
   <ItemGroup>

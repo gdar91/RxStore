@@ -10,7 +10,7 @@ namespace RxStore
         private readonly IObservable<Unit> observable;
 
 
-        public EntityInfoOnline()
+        protected EntityInfoOnline()
         {
             observable =
                 Observable

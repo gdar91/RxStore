@@ -11,7 +11,7 @@ namespace RxStore
         private readonly Memo<TKey, IObservable<Unit>> byKey;
 
 
-        public EntitySetOnline()
+        protected EntitySetOnline()
         {
             byKey = new(key =>
                 Observable

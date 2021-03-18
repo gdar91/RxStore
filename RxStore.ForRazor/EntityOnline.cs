@@ -9,13 +9,13 @@ namespace RxStore
         private readonly Subject<IObservable<TEvent>> outEventsObservables = new();
 
 
-        public EntityOnline()
+        protected EntityOnline()
         {
             OutEvents = outEventsObservables.SelectMany(observable => observable);
         }
 
 
-        internal IObservable<TEvent> OutEvents { get; }
+        internal IObservable<TEvent> OutEvents { get; private protected set; }
 
 
         private protected void OnNextOutEventsObservable(IObservable<TEvent> observable)
