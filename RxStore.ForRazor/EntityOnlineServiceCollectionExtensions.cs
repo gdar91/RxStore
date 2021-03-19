@@ -54,5 +54,59 @@ namespace RxStore
 
             return services;
         }
+
+
+
+
+        public static IServiceCollection AddCommandInfoOnline<TCommand, TEvent, TCommandInfoOnline>(
+            this IServiceCollection services,
+            ServiceLifetime serviceLifetime
+        )
+            where TCommandInfoOnline : CommandInfoOnline<TCommand, TEvent>
+        {
+            services.Add(
+                new ServiceDescriptor(
+                    typeof(TCommandInfoOnline),
+                    typeof(TCommandInfoOnline),
+                    serviceLifetime
+                )
+            );
+
+            services.Add(
+                new ServiceDescriptor(
+                    typeof(IEntityOnlineDispatcher),
+                    typeof(EntityOnlineDispatcher<TEvent, TCommandInfoOnline>),
+                    serviceLifetime
+                )
+            );
+
+            return services;
+        }
+
+
+        public static IServiceCollection AddCommandSetOnline<TKey, TCommand, TEvent, TCommandSetOnline>(
+            this IServiceCollection services,
+            ServiceLifetime serviceLifetime
+        )
+            where TCommandSetOnline : CommandSetOnline<TKey, TCommand, TEvent>
+        {
+            services.Add(
+                new ServiceDescriptor(
+                    typeof(TCommandSetOnline),
+                    typeof(TCommandSetOnline),
+                    serviceLifetime
+                )
+            );
+
+            services.Add(
+                new ServiceDescriptor(
+                    typeof(IEntityOnlineDispatcher),
+                    typeof(EntityOnlineDispatcher<TEvent, TCommandSetOnline>),
+                    serviceLifetime
+                )
+            );
+
+            return services;
+        }
     }
 }
