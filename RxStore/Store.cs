@@ -30,7 +30,7 @@ namespace RxStore
         }
 
 
-        private Subject<TEvent> Events { get; } = new Subject<TEvent>();
+        private Subject<TEvent> Events { get; } = new();
 
 
         internal IObservable<StateTransition> StateTransitions { get; }

@@ -12,30 +12,18 @@ namespace RxStore
 
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
-            RenderFragment<TView> childContent =
-                view =>
-                    builder =>
-                    {
-                        ComponentType.OpenComponent(0, builder);
-                        
-                        builder.AddAttribute(
-                            1,
-                            nameof(PureComponentBase<TView, TCommand>.View),
-                            view
-                        );
-
-                        builder.AddAttribute(
-                            2,
-                            nameof(PureComponentBase<TView, TCommand>.OnCommand),
-                            OnCommand
-                        );
-                        
-                        builder.CloseComponent();
-                    };
+            RenderFragment ChildContent(TView view) =>
+                builder =>
+                {
+                    ComponentType.OpenComponent(0, builder);
+                    builder.AddAttribute(1, nameof(View), view);
+                    builder.AddAttribute(2, nameof(OnCommand), OnCommand);
+                    builder.CloseComponent();
+                };
 
             builder.OpenComponent<Subscribe<TView>>(0);
             builder.AddAttribute(1, nameof(Subscribe<TView>.To), Views);
-            builder.AddAttribute(2, nameof(Subscribe<TView>.ChildContent), childContent);
+            builder.AddAttribute(2, nameof(Subscribe<TView>.ChildContent), (RenderFragment<TView>) ChildContent);
             builder.CloseComponent();
         }
     }

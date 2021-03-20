@@ -1,6 +1,5 @@
 ﻿@namespace RxStore
 
-@using System.Reactive
 @using System.Reactive.Linq
 @using System.Reactive.Subjects
 
@@ -20,18 +19,17 @@
 
 @code
 {
-    private readonly Subject<IObservable<T>> sourcesSubject = new Subject<IObservable<T>>();
+    private readonly Subject<IObservable<T>> sourcesSubject = new();
 
-    private readonly Subject<RenderFragment<T>> childContentsSubject =
-        new Subject<RenderFragment<T>>();
-
-
-    private readonly object gate = new object();
-
-    private bool shouldRender = false;
+    private readonly Subject<RenderFragment<T>> childContentsSubject = new();
 
 
-    private bool valueAvailable = false;
+    private readonly object gate = new();
+
+    private bool shouldRender;
+
+
+    private bool valueAvailable;
 
     private T value;
 
@@ -42,16 +40,13 @@
     public Subscribe()
     {
         sourcesSubject
-            .CombineLatest(Initializes, (source, initialize) => source)
+            .CombineLatest(Initializes, (source, _) => source)
             .DistinctUntilChanged()
-            .Select(source =>
-                source?.Catch<T, Exception>(e => Observable.Empty<T>())
-                    ?? Observable.Empty<T>()
-            )
+            .Select(source => source?.Catch<T, Exception>(_ => Observable.Empty<T>()) ?? Observable.Empty<T>())
             .Switch()
             .DistinctUntilChanged()
             .Select(value =>
-                Observable.FromAsync(cancellationToken =>
+                Observable.FromAsync(_ =>
                     InvokeAsync(() =>
                     {
                         lock (gate)
@@ -71,10 +66,10 @@
 
 
         childContentsSubject
-            .CombineLatest(Initializes, (childContent, initialize) => childContent)
+            .CombineLatest(Initializes, (childContent, _) => childContent)
             .DistinctUntilChanged()
             .Select(childContent =>
-                Observable.FromAsync(cancellationToken =>
+                Observable.FromAsync(_ =>
                     InvokeAsync(() =>
                     {
                         lock (gate)

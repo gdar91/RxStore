@@ -14,7 +14,7 @@ namespace RxStore
         {
             observable =
                 Observable
-                    .Create<Unit>(observer =>
+                    .Create<Unit>(_ =>
                     {
                         var whenOfflineSubject = new ReplaySubject<Unit>(1);
                         var whenOffline = whenOfflineSubject.AsObservable();

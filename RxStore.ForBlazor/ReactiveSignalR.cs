@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.FSharp.Core;
 using System;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -19,7 +18,7 @@ namespace RxStore
 
                     hubConnection.Closed += nullableException =>
                     {
-                        if (nullableException is Exception exception)
+                        if (nullableException is { } exception)
                         {
                             observer.OnError(exception);
                         }
@@ -42,7 +41,9 @@ namespace RxStore
                             hubConnection.DisposeAsync();
                         }
                         catch
-                        { }
+                        {
+                            // ignored
+                        }
                     };
                 }
             );

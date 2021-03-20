@@ -31,7 +31,7 @@ namespace RxStore
         {
             private readonly IObservable<TState> observable;
 
-            private readonly ISubject<Unit> disposes = new ReplaySubject<Unit>(1);
+            private readonly ReplaySubject<Unit> disposes = new(1);
 
 
             public ObservableProjection(IObservable<TState> observable)

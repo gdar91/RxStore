@@ -1,6 +1,6 @@
 ﻿namespace RxStore
 
-type Never = Never of Never
+type Never = private Never of Never
 
 module Never =
 

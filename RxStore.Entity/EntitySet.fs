@@ -92,8 +92,8 @@ module EntitySet =
         entitySet |> withOne key EntityInfo.empty
 
 
-    [<CompiledName "MapOne">]
-    let mapOne key mapping entitySet =
+    [<CompiledName "UpdateOne">]
+    let updateOne key mapping entitySet =
         entitySet
         |> one key
         |> mapping
@@ -102,53 +102,44 @@ module EntitySet =
 
     [<CompiledName "WithOneStatus">]
     let withOneStatus key status entitySet =
-        entitySet
-        |> mapOne key (EntityInfo.withStatus status)
+        entitySet |> updateOne key (EntityInfo.withStatus status)
 
 
     [<CompiledName "WithOneOfflineStatus">]
     let withOneOfflineStatus key entitySet =
-        entitySet
-        |> mapOne key EntityInfo.withOfflineStatus
+        entitySet |> updateOne key EntityInfo.withOfflineStatus
 
 
     [<CompiledName "WithOneOnlineStatus">]
     let withOneOnlineStatus key entitySet =
-        entitySet
-        |> mapOne key EntityInfo.withOnlineStatus
+        entitySet |> updateOne key EntityInfo.withOnlineStatus
 
 
     [<CompiledName "WithOneError">]
     let withOneError key stamp entitySet =
-        entitySet
-        |> mapOne key (EntityInfo.withError stamp)
+        entitySet |> updateOne key (EntityInfo.withError stamp)
 
 
     [<CompiledName "WithOneCompletingError">]
     let withOneCompletingError key stamp entitySet =
-        entitySet
-        |> mapOne key (EntityInfo.withCompletingError stamp)
+        entitySet |> updateOne key (EntityInfo.withCompletingError stamp)
 
 
     [<CompiledName "WithOneOk">]
     let withOneOk key stamp entitySet =
-        entitySet
-        |> mapOne key (EntityInfo.withOk stamp)
+        entitySet |> updateOne key (EntityInfo.withOk stamp)
 
 
     [<CompiledName "WithOneCompletingOk">]
     let withOneCompletingOk key stamp entitySet =
-        entitySet
-        |> mapOne key (EntityInfo.withCompletingOk stamp)
+        entitySet |> updateOne key (EntityInfo.withCompletingOk stamp)
 
 
     [<CompiledName "WithOneResult">]
     let withOneResult key stamp entitySet =
-        entitySet
-        |> mapOne key (EntityInfo.withResult stamp)
+        entitySet |> updateOne key (EntityInfo.withResult stamp)
 
 
     [<CompiledName "WithOneCompletingResult">]
     let withOneCompletingResult key stamp entitySet =
-        entitySet
-        |> mapOne key (EntityInfo.withCompletingResult stamp)
+        entitySet |> updateOne key (EntityInfo.withCompletingResult stamp)

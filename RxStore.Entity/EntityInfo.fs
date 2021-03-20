@@ -87,12 +87,12 @@ module EntityInfo =
     [<CompiledName "WithResult">]
     let withResult stamp entityInfo =
         match stamp.Item with
-        | Ok ok -> entityInfo |> withOk stamp
-        | Error error -> entityInfo |> withError stamp
+        | Ok ok -> entityInfo |> withOk (stamp |> Stamp.mapTo ok)
+        | Error error -> entityInfo |> withError (stamp |> Stamp.mapTo error)
 
 
     [<CompiledName "WithCompletingResult">]
     let withCompletingResult stamp entityInfo =
         match stamp.Item with
-        | Ok ok -> entityInfo |> withCompletingOk stamp
-        | Error error -> entityInfo |> withCompletingError stamp
+        | Ok ok -> entityInfo |> withCompletingOk (stamp |> Stamp.mapTo ok)
+        | Error error -> entityInfo |> withCompletingError (stamp |> Stamp.mapTo error)

@@ -30,7 +30,7 @@ namespace RxStore
             where TDestComponent : TComponent
         {
             return services.AddSingleton<IComponentType<TComponent>>(
-                provider => new ComponentType<TComponent, TDestComponent>()
+                _ => new ComponentType<TComponent, TDestComponent>()
             );
         }
     }

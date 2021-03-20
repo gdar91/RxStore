@@ -11,7 +11,7 @@ namespace RxStore
             where TEntityInfoOnline : EntityInfoOnline<TEvent>
         {
             services.Add(
-                new ServiceDescriptor(
+                new(
                     typeof(TEntityInfoOnline),
                     typeof(TEntityInfoOnline),
                     serviceLifetime
@@ -19,7 +19,7 @@ namespace RxStore
             );
 
             services.Add(
-                new ServiceDescriptor(
+                new(
                     typeof(IEntityOnlineDispatcher),
                     typeof(EntityOnlineDispatcher<TEvent, TEntityInfoOnline>),
                     serviceLifetime
@@ -37,7 +37,7 @@ namespace RxStore
             where TEntitySetOnline : EntitySetOnline<TKey, TEvent>
         {
             services.Add(
-                new ServiceDescriptor(
+                new(
                     typeof(TEntitySetOnline),
                     typeof(TEntitySetOnline),
                     serviceLifetime
@@ -45,7 +45,7 @@ namespace RxStore
             );
 
             services.Add(
-                new ServiceDescriptor(
+                new(
                     typeof(IEntityOnlineDispatcher),
                     typeof(EntityOnlineDispatcher<TEvent, TEntitySetOnline>),
                     serviceLifetime
@@ -65,7 +65,7 @@ namespace RxStore
             where TCommandInfoOnline : CommandInfoOnline<TCommand, TEvent>
         {
             services.Add(
-                new ServiceDescriptor(
+                new(
                     typeof(TCommandInfoOnline),
                     typeof(TCommandInfoOnline),
                     serviceLifetime
@@ -73,7 +73,7 @@ namespace RxStore
             );
 
             services.Add(
-                new ServiceDescriptor(
+                new(
                     typeof(IEntityOnlineDispatcher),
                     typeof(EntityOnlineDispatcher<TEvent, TCommandInfoOnline>),
                     serviceLifetime
@@ -91,7 +91,7 @@ namespace RxStore
             where TCommandSetOnline : CommandSetOnline<TKey, TCommand, TEvent>
         {
             services.Add(
-                new ServiceDescriptor(
+                new(
                     typeof(TCommandSetOnline),
                     typeof(TCommandSetOnline),
                     serviceLifetime
@@ -99,7 +99,7 @@ namespace RxStore
             );
 
             services.Add(
-                new ServiceDescriptor(
+                new(
                     typeof(IEntityOnlineDispatcher),
                     typeof(EntityOnlineDispatcher<TEvent, TCommandSetOnline>),
                     serviceLifetime

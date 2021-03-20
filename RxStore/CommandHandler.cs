@@ -5,13 +5,13 @@ using System.Reactive.Subjects;
 
 namespace RxStore
 {
-    public interface IHandler<in TCommand, out TEvent> : ISubject<TCommand, TEvent>
+    public interface ICommandHandler<in TCommand, out TEvent> : ISubject<TCommand, TEvent>
     { }
 
 
-    public abstract class Handler<TCommand, TEvent> : IHandler<TCommand, TEvent>
+    public abstract class CommandHandler<TCommand, TEvent> : ICommandHandler<TCommand, TEvent>
     {
-        public Handler()
+        protected CommandHandler()
         {
             Events =
                 Observable
@@ -21,7 +21,7 @@ namespace RxStore
         }
 
 
-        private Subject<TCommand> Commands { get; } = new Subject<TCommand>();
+        private Subject<TCommand> Commands { get; } = new();
 
         private IObservable<TEvent> Events { get; }
 

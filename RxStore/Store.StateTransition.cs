@@ -32,8 +32,7 @@ namespace RxStore
 
                 public bool Equals(Initial other)
                 {
-                    return other != null &&
-                           EqualityComparer<TState>.Default.Equals(State, other.State);
+                    return other != null && EqualityComparer<TState>.Default.Equals(State, other.State);
                 }
 
                 public override int GetHashCode()
@@ -55,8 +54,7 @@ namespace RxStore
             }
 
 
-            public static StateTransition NewInitial(TState state) =>
-                new Initial(state);
+            public static StateTransition NewInitial(TState state) => new Initial(state);
 
 
 
@@ -110,8 +108,7 @@ namespace RxStore
             }
 
 
-            public static StateTransition NewByEvent(TState state, TEvent @event) =>
-                new ByEvent(state, @event);
+            public static StateTransition NewByEvent(TState state, TEvent @event) => new ByEvent(state, @event);
 
 
 
@@ -120,7 +117,7 @@ namespace RxStore
             {
                 Initial initialStateTransition => initialStateTransition.State,
                 ByEvent byEventStateTransition => byEventStateTransition.State,
-                _ => throw new Exception()
+                _ => throw new()
             };
 
 

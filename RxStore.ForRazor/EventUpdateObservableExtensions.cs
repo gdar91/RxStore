@@ -22,10 +22,9 @@ namespace RxStore
                                 EventTransition.AsUpdateConfirmation(versioned.Item),
                             (0, var v0, var v1) when versionIsSuccessor(v0, v1) =>
                                 EventTransition.AsUpdateEvent(versioned.Item),
-                            (0, _, _) =>
-                                EventTransition.AsUpdateState(versioned.Item),
-                            (_, _, _) =>
-                                EventTransition.AsUpdateEvent(versioned.Item)
+                            (0, _, _) => EventTransition.AsUpdateState(versioned.Item),
+                            // TODO when lifelines don't match
+                            (_, _, _) => EventTransition.AsUpdateEvent(versioned.Item)
                         }
                     )
                 );
@@ -55,20 +54,16 @@ namespace RxStore
             return AsEventUpdates(
                 observable,
                 availableVersion,
-                (version0, version1) => object.Equals(version0, version1),
+                (version0, version1) => Equals(version0, version1),
                 (version0, version1) => (version0, version1) switch
                 {
-                    (var v0, var v1) when
-                            v0.Lifeline == v1.Lifeline &&
-                            v0.Value + 1L == v1.Value =>
-                        true,
-                    (var v0, var v1) when
+                    var (v0, v1) when v0.Lifeline == v1.Lifeline && v0.Value + 1L == v1.Value => true,
+                    var (v0, v1) when
                             v0.Lifeline == DateTimeOffset.MinValue &&
                             v0.Value == zeroVersionValue &&
                             v0.Value + 1L == v1.Value =>
                         true,
-                    (_, _) =>
-                        false
+                    (_, _) => false
                 }
             );
         }
@@ -91,37 +86,25 @@ namespace RxStore
                         EventUpdate<TState, TEvent>.State { Item: var state } =>
                             stateVersionsAction(accumulator.Item1.Version, element.Version) switch
                             {
-                                var action when action.IsStay =>
-                                    (accumulator.Item1, false),
-                                var action when action.IsAdvance =>
-                                    (Versioned.OfValues(element.Version, state), true),
-                                var action when action.IsRaiseMismatch =>
-                                    throw new Exception("Version mismatch."),
-                                var action =>
-                                    throw new Exception($"Impossible enum element {action}.")
+                                var action when action.IsStay => (accumulator.Item1, false),
+                                var action when action.IsAdvance => (Versioned.OfValues(element.Version, state), true),
+                                var action when action.IsRaiseMismatch => throw new("Version mismatch."),
+                                var action => throw new($"Impossible enum element {action}.")
                             },
                         EventUpdate<TState, TEvent>.Event { Item: var @event } =>
                             eventVersionsAction(accumulator.Item1.Version, element.Version) switch
                             {
-                                var action when action.IsStay =>
-                                    (accumulator.Item1, false),
+                                var action when action.IsStay => (accumulator.Item1, false),
                                 var action when action.IsAdvance =>
                                     (
-                                        Versioned.OfValues(
-                                            element.Version,
-                                            reducer(accumulator.Item1.Item, @event)
-                                        ),
+                                        Versioned.OfValues(element.Version, reducer(accumulator.Item1.Item, @event)),
                                         true
                                     ),
-                                var action when action.IsRaiseMismatch =>
-                                    throw new Exception("Version mismatch."),
-                                var action =>
-                                    throw new Exception($"Impossible enum element {action}.")
+                                var action when action.IsRaiseMismatch => throw new("Version mismatch."),
+                                var action => throw new($"Impossible enum element {action}.")
                             },
-                        var eventUpdate when eventUpdate.IsConfirmation =>
-                            accumulator,
-                        var eventUpdate =>
-                            throw new Exception($"Impossible union case {eventUpdate}.")
+                        var eventUpdate when eventUpdate.IsConfirmation => accumulator,
+                        var eventUpdate => throw new($"Impossible union case {eventUpdate}.")
                     }
                 )
                 .Where(accumulator => accumulator.Item2)
@@ -141,17 +124,19 @@ namespace RxStore
                 initialState,
                 reducer,
                 initialVersion,
-                (versionA, versionB) => (versionA, versionB) switch
-                {
-                    var (a, b) when a >= b => EventUpdate.Action.Stay,
-                    var (a, b) => EventUpdate.Action.Advance
-                },
-                (versionA, versionB) => (versionA, versionB) switch
-                {
-                    var (a, b) when a >= b => EventUpdate.Action.Stay,
-                    var (a, b) when a + 1L == b => EventUpdate.Action.Advance,
-                    var (a, b) => EventUpdate.Action.RaiseMismatch
-                }
+                (versionA, versionB) =>
+                    (versionA, versionB) switch
+                    {
+                        var (a, b) when a >= b => EventUpdate.Action.Stay,
+                        var (_, _) => EventUpdate.Action.Advance
+                    },
+                (versionA, versionB) =>
+                    (versionA, versionB) switch
+                    {
+                        var (a, b) when a >= b => EventUpdate.Action.Stay,
+                        var (a, b) when a + 1L == b => EventUpdate.Action.Advance,
+                        var (_, _) => EventUpdate.Action.RaiseMismatch
+                    }
             );
         }
 
@@ -171,34 +156,21 @@ namespace RxStore
                 initialVersion,
                 (version0, version1) => (version0, version1) switch
                 {
-                    var (a, b) when a.Lifeline < b.Lifeline =>
-                        EventUpdate.Action.Advance,
-                    var (a, b) when
-                            a.Lifeline == b.Lifeline &&
-                            a.Value < b.Value =>
-                        EventUpdate.Action.Advance,
-                    var (a, b) =>
-                        EventUpdate.Action.Stay
+                    var (a, b) when a.Lifeline < b.Lifeline => EventUpdate.Action.Advance,
+                    var (a, b) when a.Lifeline == b.Lifeline && a.Value < b.Value => EventUpdate.Action.Advance,
+                    var (_, _) => EventUpdate.Action.Stay
                 },
                 (version0, version1) => (version0, version1) switch
                 {
-                    var (a, b) when
-                            a.Lifeline == b.Lifeline &&
-                            a.Value + 1L == b.Value =>
-                        EventUpdate.Action.Advance,
-                    var (a, b) when
-                            a.Lifeline == b.Lifeline &&
-                            a.Value < b.Value =>
-                        EventUpdate.Action.RaiseMismatch,
-                    var (a, b) when a.Lifeline >= b.Lifeline =>
-                        EventUpdate.Action.Stay,
+                    var (a, b) when a.Lifeline == b.Lifeline && a.Value + 1L == b.Value => EventUpdate.Action.Advance,
+                    var (a, b) when a.Lifeline == b.Lifeline && a.Value < b.Value => EventUpdate.Action.RaiseMismatch,
+                    var (a, b) when a.Lifeline >= b.Lifeline => EventUpdate.Action.Stay,
                     var (a, b) when
                             a.Lifeline == DateTimeOffset.MinValue &&
                             a.Value == zeroVersionValue &&
                             b.Value == a.Value + 1L =>
                         EventUpdate.Action.Advance,
-                    var (a, b) =>
-                        EventUpdate.Action.RaiseMismatch
+                    var (_, _) => EventUpdate.Action.RaiseMismatch
                 }
             );
         }
