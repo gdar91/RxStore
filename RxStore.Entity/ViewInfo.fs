@@ -5,6 +5,7 @@ type ViewInfo<'View, 'EntityTarget when 'EntityTarget : comparison> =
     { View: 'View;
       EntityTargets: 'EntityTarget Set }
 
+
 module ViewInfo =
 
     [<CompiledName "Result">]
@@ -21,11 +22,21 @@ module ViewInfo =
             { View = viewInfo.View;
               EntityTargets = resultEntityTargets }
         | _ -> viewInfo
-    
+
     [<CompiledName "WithEntityTarget">]
     let withEntityTarget entityTarget viewInfo =
         viewInfo
         |> withEntityTargets [ entityTarget ]
+
+    [<CompiledName "AddEntityTargets">]
+    let addEntityTargets entityTargets =
+        { View = ();
+          EntityTargets = Set.ofSeq entityTargets }
+
+    [<CompiledName "AddEntityTarget">]
+    let addEntityTarget entityTarget =
+        { View = ();
+          EntityTargets = Set.singleton entityTarget }
 
     [<CompiledName "Map">]
     let map mapping viewInfo =
@@ -37,11 +48,56 @@ module ViewInfo =
         { View = applying.View viewInfo.View;
           EntityTargets = Set.union applying.EntityTargets viewInfo.EntityTargets }
 
-    [<CompiledName "Combine">]
-    let combine viewInfo1 viewInfo2 =
+    [<CompiledName "Lift">]
+    let lift2 viewInfo1 viewInfo2 lifting =
         viewInfo1
-        |> map (fun view1 view2 -> view1, view2)
+        |> map lifting
         |> fun viewInfo -> apply viewInfo viewInfo2
+
+    [<CompiledName "Lift">]
+    let lift3 viewInfo1 viewInfo2 viewInfo3 lifting =
+        viewInfo1
+        |> map lifting
+        |> fun viewInfo -> apply viewInfo viewInfo2
+        |> fun viewInfo -> apply viewInfo viewInfo3
+
+    [<CompiledName "Lift">]
+    let lift4 viewInfo1 viewInfo2 viewInfo3 viewInfo4 lifting =
+        viewInfo1
+        |> map lifting
+        |> fun viewInfo -> apply viewInfo viewInfo2
+        |> fun viewInfo -> apply viewInfo viewInfo3
+        |> fun viewInfo -> apply viewInfo viewInfo4
+
+    [<CompiledName "Lift">]
+    let lift5 viewInfo1 viewInfo2 viewInfo3 viewInfo4 viewInfo5 lifting =
+        viewInfo1
+        |> map lifting
+        |> fun viewInfo -> apply viewInfo viewInfo2
+        |> fun viewInfo -> apply viewInfo viewInfo3
+        |> fun viewInfo -> apply viewInfo viewInfo4
+        |> fun viewInfo -> apply viewInfo viewInfo5
+
+    [<CompiledName "Lift">]
+    let lift6 viewInfo1 viewInfo2 viewInfo3 viewInfo4 viewInfo5 viewInfo6 lifting =
+        viewInfo1
+        |> map lifting
+        |> fun viewInfo -> apply viewInfo viewInfo2
+        |> fun viewInfo -> apply viewInfo viewInfo3
+        |> fun viewInfo -> apply viewInfo viewInfo4
+        |> fun viewInfo -> apply viewInfo viewInfo5
+        |> fun viewInfo -> apply viewInfo viewInfo6
+
+    [<CompiledName "Lift">]
+    let lift7 viewInfo1 viewInfo2 viewInfo3 viewInfo4 viewInfo5 viewInfo6 viewInfo7 lifting =
+        viewInfo1
+        |> map lifting
+        |> fun viewInfo -> apply viewInfo viewInfo2
+        |> fun viewInfo -> apply viewInfo viewInfo3
+        |> fun viewInfo -> apply viewInfo viewInfo4
+        |> fun viewInfo -> apply viewInfo viewInfo5
+        |> fun viewInfo -> apply viewInfo viewInfo6
+        |> fun viewInfo -> apply viewInfo viewInfo7
 
     [<CompiledName "CombineWith">]
     let combineWith viewInfo2 viewInfo =
@@ -56,9 +112,9 @@ module ViewInfo =
 
     [<CompiledName "Bind">]
     let bind binding viewInfo =
-        viewInfo
-        |> map binding
-        |> join
+        let innerViewInfo = binding viewInfo.View
+        { View = innerViewInfo.View;
+          EntityTargets = Set.union viewInfo.EntityTargets innerViewInfo.EntityTargets }
 
     [<CompiledName "Sequence">]
     let sequence viewInfos =
@@ -69,19 +125,17 @@ module ViewInfo =
                 |> map (fun item sequence -> seq { yield! sequence; yield item })
                 |> fun applying -> state |> apply applying)
 
+    [<CompiledName "SequenceList">]
+    let sequenceList viewInfos =
+        viewInfos
+        |> sequence
+        |> map List.ofSeq
+
     [<CompiledName "SequenceOption">]
     let sequenceOption viewInfoOption =
-        //(result None, viewInfoOption)
-        //||> Option.fold
-        //    (fun state element ->
-        //        combineWith
-        //            state
-        //            element
-        //            (fun option item -> Some item))
         match viewInfoOption with
         | Some viewInfo -> viewInfo |> map Some
         | None -> result None
-        
 
 
     type Builder() =
@@ -90,4 +144,10 @@ module ViewInfo =
         member x.ReturnFrom(value) = value
         member x.Zero() = result ()
 
-    let builder = Builder()
+
+
+
+[<AutoOpen>]
+module ViewInfoBuilder =
+
+    let viewInfo = ViewInfo.Builder()

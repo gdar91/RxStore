@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
-using System.Reactive;
 using System.Reactive.Linq;
 
 namespace RxStore

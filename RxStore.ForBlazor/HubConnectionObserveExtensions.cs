@@ -1,8 +1,6 @@
 ﻿using Fills;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 
 namespace RxStore
 {
